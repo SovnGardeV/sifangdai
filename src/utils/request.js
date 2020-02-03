@@ -54,6 +54,7 @@ service.interceptors.response.use(
       setToken(token)
       // store.commit('SET_TOKEN', token)
     }
+    debugger
 
     if (res.errorCode && res.errorCode !== '10000' && res.errorCode !== '10008' && res.errorCode !== '-1003') {
       Message({
