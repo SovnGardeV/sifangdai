@@ -16,6 +16,7 @@
             <el-button type="primary" size="mini" @click="mainTable.pager.index = 1;getMainTableData()">
               <i class="el-icon-search" />
             </el-button>
+            <el-button type="primary" size="mini" @click="showAddForm">新增</el-button>
           </el-form-item>
         </el-form>
       </el-card>
@@ -84,6 +85,30 @@
         </div>
       </el-dialog>
 
+      <el-dialog width="500px" center title="新增用户" :visible.sync="mainTable.dialogAddVisible">
+        <el-form ref="addForm" :model="mainTable.addForm" label-width="80px">
+          <el-form-item label="商户名">
+            <el-input v-model="mainTable.addForm.commercialName" autocomplete="off" />
+          </el-form-item>
+          <el-form-item label="手机号">
+            <el-input v-model="mainTable.addForm.commercialIphone" autocomplete="off" />
+          </el-form-item>
+          <el-form-item label="添加类型">
+            <el-select v-model="mainTable.addForm.userType" style="width: 100%;">
+              <el-option value="1" label="商户">商户</el-option>
+              <el-option value="0" label="系统用户">系统用户</el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input v-model="mainTable.addForm.commercialPassword" type="password" autocomplete="off" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button size="mini" @click="mainTable.dialogAddVisible = false">取 消</el-button>
+          <el-button size="mini" type="primary" @click="handleAddForm">确 定</el-button>
+        </div>
+      </el-dialog>
+
       <el-dialog width="500px" top="3vh" style="height:80%" center title="分配权限" :visible.sync="mainTable.dialogPermissionVisible">
         <div>
           <el-tree
@@ -114,10 +139,10 @@
 
 <script>
 import { getMenu, addRoleMenu } from '@/api/menu'
-import { getInfo } from '@/api/user'
 import { bulidStr, handleIntoChildren } from '@/utils/index'
-import { getUserList, setRadio, insertIp, getUserInfo } from '@/api/user'
+import { getUserList, setRadio, insertIp, getUserInfo, getInfo, addUser } from '@/api/user'
 import Pagination from '@/components/Pagination'
+import { JSEncrypt } from 'jsencrypt'
 
 export default {
   components: {
@@ -130,6 +155,7 @@ export default {
         loading: false,
         treeLoading: false,
         dialogFormVisible: false,
+        dialogAddVisible: false,
         dialogPermissionVisible: false,
         commercialRatio: 0,
         row: {},
@@ -141,6 +167,12 @@ export default {
         form: {
           commercialNumber: '',
           ips: ''
+        },
+        addForm: {
+          commercialName: '',
+          commercialIphone: '',
+          userType: '',
+          commercialPassword: ''
         },
         array: [],
         tree: [],
@@ -242,6 +274,29 @@ export default {
         this.mainTable.dialogPermissionVisible = false
       })
     },
+    showAddForm() {
+      const keyNameArr = Object.keys(this.mainTable.addForm)
+      keyNameArr.forEach(item => {
+        this.mainTable.addForm[item] = ''
+      })
+      this.mainTable.dialogAddVisible = true
+    },
+    handleAddForm() {
+      const _form = Object.assign({}, this.mainTable.addForm)
+      const encrypt = new JSEncrypt()
+      encrypt.setPublicKey(localStorage.getItem('publicKey'))
+      _form.commercialPassword = encrypt.encrypt(_form.commercialPassword)
+      addUser(_form).then(response => {
+        if (response.errorCode !== '10000') {
+          return
+        }
+
+        this.$message.success(response.mes)
+        this.mainTable.dialogAddVisible = false
+      }).catch(err => {
+        this.$message.error(err)
+      })
+    },
     editService(item) {
       this.mainTable.commercialRatio = item.commercialRatio
       item.isEdit = true
@@ -282,7 +337,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.el-form-item{
-    margin-bottom: 0;
+.filter-container{
+  .el-form-item{
+      margin-bottom: 0;
+  }
 }
+
 </style>

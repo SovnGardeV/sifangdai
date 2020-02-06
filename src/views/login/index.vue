@@ -58,7 +58,7 @@
       <el-button v-loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
       <div class="tips">
-        <span @click.prevent="handleToRegister">账号注册</span>
+        <!-- <span @click.prevent="handleToRegister">账号注册</span> -->
         <span style="float: right">忘记密码</span>
       </div>
 
@@ -131,6 +131,7 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/getPublicKey').then(response => {
+            localStorage.setItem('publicKey', response.publicKey)
             const encrypt = new JSEncrypt()
             encrypt.setPublicKey(response.publicKey)
             const _password = encrypt.encrypt(this.loginForm.password)

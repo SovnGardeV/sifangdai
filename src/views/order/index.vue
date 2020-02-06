@@ -5,7 +5,7 @@
         <el-form-item>
           <el-input v-model="mainTable.filter.remark" placeholder="订单标识" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="$store.state.user.mode === 'admin'">
           <el-input v-model="mainTable.filter.commercialNumber" placeholder="商户号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item>
@@ -42,11 +42,55 @@
         <el-table-column align="center" label="内部订单号" prop="orderId" />
         <el-table-column align="center" label="外部订单号" prop="outId" />
         <el-table-column align="center" label="商户号" prop="commercialNumber" />
-        <el-table-column align="center" label="订单名称" prop="makerName" />
+        <el-table-column align="center" label="操作金额">
+          <template slot-scope="scope">
+            {{ scope.row.operatorMoney / 100 }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="浮动金额">
+          <template slot-scope="scope">
+            {{ scope.row.floatMoney / 100 }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="代收/代付实际金额">
+          <template slot-scope="scope">
+            {{ scope.row.deductedMoney / 100 }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="订单状态">
+          <template slot-scope="scope">
+            {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="分配的二维码Id" prop="qrId" />
+        <el-table-column align="center" label="打款人" prop="makerName" />
         <el-table-column align="center" label="订单标识" prop="remark" />
         <el-table-column align="center" label="创建时间">
           <template slot-scope="scope">
             {{ new Date(scope.row.createTime).toLocaleString() }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="确认时间">
+          <template slot-scope="scope">
+            {{ new Date(scope.row.confirmTime).toLocaleString() }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="操作人" prop="operatorName" />
+        <el-table-column align="center" label="应用名" prop="applicationName" />
+        <el-table-column align="center" label="数量" prop="num" />
+        <el-table-column align="center" label="应用类型">
+          <template slot-scope="scope">
+            {{ scope.row.applicationType == 1 ? '代收' : '代付' }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="支付类型">
+          <template slot-scope="scope">
+            {{ scope.row.payType == 1 ? '支付宝' : scope.row.orderStatus == 2 ? '微信' : '银行卡' }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="订单状态">
+          <template slot-scope="scope">
+            {{ scope.row.isHand == 1 ? '是' : '否' }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="操作" width="200px">

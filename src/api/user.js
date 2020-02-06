@@ -84,3 +84,30 @@ export function addAPP(data) {
     data
   })
 }
+
+export function getAPP(data) {
+  return request({
+    url: '/instead-pay-web/app/getAppByComId',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function modifyPassword(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/updateCommercialPwd',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function addUser(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/addCommercial',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}

@@ -141,8 +141,8 @@ export default {
         appName: '应用名',
         appBackUrl: '回调地址',
         appIsPut: '是否上架',
-        createTime: '	创建时间',
-        appKey: '	appKey'
+        createTime: '创建时间',
+        appKey: 'appKey'
       },
       commercialInfo: {}
     }

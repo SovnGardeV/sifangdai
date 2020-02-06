@@ -7,7 +7,8 @@ const state = {
   token: getToken(),
   name: '',
   avatar: 'https://iconfont.alicdn.com/t/1562932918092.jpg@100h_100w.jpg',
-  router: []
+  router: '',
+  mode: localStorage.getItem('role')
 }
 
 const mutations = {
@@ -22,6 +23,9 @@ const mutations = {
   },
   SET_ROUTER: (state, router) => {
     state.router = router
+  },
+  SET_MODE: (state, mode) => {
+    state.mode = mode
   }
 }
 
@@ -32,6 +36,13 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ commercialName: username.trim(), commercialPassword: password }).then(response => {
         const { data } = response
+        if (data === '0000000000') {
+          localStorage.setItem('role', 'admin')
+          commit('SET_MODE', 'admin')
+        } else {
+          localStorage.setItem('role', 'operator')
+          commit('SET_MODE', 'operator')
+        }
         commit('SET_NAME', username)
         localStorage.setItem('number', data)
         localStorage.setItem('name', username)
