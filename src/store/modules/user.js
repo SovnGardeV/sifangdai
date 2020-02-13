@@ -36,7 +36,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ commercialName: username.trim(), commercialPassword: password }).then(response => {
         const { data } = response
-        if (data === '0000000000') {
+        if (data.commercialNumber === '0000000000') {
           localStorage.setItem('role', 'admin')
           commit('SET_MODE', 'admin')
         } else {
@@ -44,7 +44,8 @@ const actions = {
           commit('SET_MODE', 'operator')
         }
         commit('SET_NAME', username)
-        localStorage.setItem('number', data)
+        localStorage.setItem('number', data.commercialNumber)
+        localStorage.setItem('id', data.commercialId)
         localStorage.setItem('name', username)
         // setToken(data.token)
         resolve()
