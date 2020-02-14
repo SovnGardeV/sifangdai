@@ -31,13 +31,20 @@
               >
                 <el-table-column align="center" label="商户号" prop="commercialNumber" />
                 <el-table-column align="center" label="APP名称" prop="appName" />
-                <el-table-column align="center" label="商户号" prop="commercialNumber" />
                 <el-table-column align="center" label="白名单" prop="appWhiteList" />
                 <el-table-column align="center" label="回调地址" prop="appBackUrl" />
                 <el-table-column align="center" label="APPkey" prop="appKey" />
-                <el-table-column align="center" label="创建时间" prop="createTime" />
+                <el-table-column align="center" label="创建时间">
+                  <template slot-scope="scope">
+                    {{ new Date(scope.row.createTime).toLocaleString() }}
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" label="操作人" prop="operatorName" />
-                <el-table-column align="center" label="操作时间" prop="operatorTime" />
+                <el-table-column align="center" label="操作时间">
+                  <template slot-scope="scope">
+                    {{ new Date(scope.row.operatorTime).toLocaleString() }}
+                  </template>
+                </el-table-column>
               </el-table>
             </el-tab-pane>
             <el-tab-pane label="新增APP" name="second">
