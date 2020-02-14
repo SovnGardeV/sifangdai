@@ -2,11 +2,10 @@ import { asynRouter, constantRoutes } from '@/router'
 import router from '@/router'
 // import store from '@/store'
 
-const route = asynRouter
 const pathArray = []
 const adminUserArray = ['User']
 
-addRoutePath(pathArray, route)
+addRoutePath(pathArray, asynRouter)
 
 function addRoutePath(arrOfPath, routes, fatherPath) {
   routes.forEach((item) => {
@@ -24,6 +23,7 @@ function addRoutePath(arrOfPath, routes, fatherPath) {
 export const asynRoutePath = pathArray
 
 export default function addRouter() {
+  const route = asynRouter.concat([])
   // const localRouter = store.getters.router
 
   for (let i = 0; i < route.length; i++) {
