@@ -53,15 +53,15 @@
                     <i v-else class="el-icon-plus avatar-uploader-icon" />
                   </el-upload>
                 </el-form-item>
-                <el-form-item label="APPID" prop="appId">
+                <!-- <el-form-item label="APPID" prop="appId">
                   <el-input v-model="addForm.appId" autocomplete="off" style="width: unset;" />
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item label="APP名称" prop="appName">
                   <el-input v-model="addForm.appName" autocomplete="off" style="width: unset;" />
                 </el-form-item>
-                <el-form-item label="APPkey" prop="appKey">
+                <!-- <el-form-item label="APPkey" prop="appKey">
                   <el-input v-model="addForm.appKey" autocomplete="off" style="width: unset;" />
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item label="回调地址" prop="appBackUrl">
                   <el-input v-model="addForm.appBackUrl" autocomplete="off" style="width: unset;" />
                 </el-form-item>
@@ -230,6 +230,8 @@ export default {
         commercialId: localStorage.getItem('id') || '182f04b9-b4e0-4515-8a09-b91c3397fadc',
         commercialNumber: localStorage.getItem('number')
       }).then(response => {
+        response.commercial.creationTime = new Date(response.commercial.creationTime).toLocaleString()
+        response.commercial.updateTime = new Date(response.commercial.updateTime).toLocaleString()
         this.commercialInfo = response.commercial || {}
       })
     },

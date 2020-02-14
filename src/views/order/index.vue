@@ -72,7 +72,7 @@
         </el-table-column>
         <el-table-column align="center" label="确认时间">
           <template slot-scope="scope">
-            {{ new Date(scope.row.confirmTime).toLocaleString() }}
+            {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="操作人" prop="operatorName" />
@@ -88,7 +88,7 @@
             {{ scope.row.payType == 1 ? '支付宝' : scope.row.orderStatus == 2 ? '微信' : '银行卡' }}
           </template>
         </el-table-column>
-        <el-table-column align="center" label="订单状态">
+        <el-table-column align="center" label="手动挂单">
           <template slot-scope="scope">
             {{ scope.row.isHand == 1 ? '是' : '否' }}
           </template>
@@ -147,11 +147,13 @@ export default {
     },
     getMainTableData() {
       this.mainTable.loading = true
+      const _filter = Object.assign({}, this.mainTable.filter)
+      _filter.commercialNumber = _filter.commercialNumber || localStorage.getItem('number')
       const _form = {
         commercialNumber: localStorage.getItem('number'),
         filter: ((filter) => {
           return bulidStr(filter)
-        })(this.mainTable.filter),
+        })(_filter),
         page: this.mainTable.pager.index,
         limit: this.mainTable.pager.size
       }

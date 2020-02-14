@@ -70,15 +70,15 @@
             <i v-else class="el-icon-plus avatar-uploader-icon" />
           </el-upload>
         </el-form-item>
-        <el-form-item label="APPID" label-width="100px" prop="appId">
+        <!-- <el-form-item label="APPID" label-width="100px" prop="appId">
           <el-input v-model="mainTable.addForm.appId" autocomplete="off" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="APP名称" label-width="100px" prop="appName">
           <el-input v-model="mainTable.addForm.appName" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="APPkey" label-width="100px" prop="appKey">
+        <!-- <el-form-item label="APPkey" label-width="100px" prop="appKey">
           <el-input v-model="mainTable.addForm.appKey" autocomplete="off" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="回调地址" label-width="100px" prop="appBackUrl">
           <el-input v-model="mainTable.addForm.appBackUrl" autocomplete="off" />
         </el-form-item>
@@ -199,7 +199,13 @@ export default {
         commercialNumber
       }
       getUserInfo(_form).then(response => {
+        response.appInfo.forEach(item => {
+          item.createTime = new Date(item.createTime).toLocaleString()
+          item.appIsPut = item.appIsPut.toString() === '0' ? '上架' : '下架'
+        })
         this.mainTable.array = this.mainTable.originArray = response.appInfo || []
+        response.commercial.creationTime = new Date(response.commercial.creationTime).toLocaleString()
+        response.commercial.updateTime = new Date(response.commercial.updateTime).toLocaleString()
         this.commercialInfo = response.commercial || {}
       }).finally(_ => {
         this.mainTable.loading = false
