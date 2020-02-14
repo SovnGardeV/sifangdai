@@ -9,7 +9,7 @@
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar" class="user-avatar">
-          <i class="el-icon-caret-bottom" style="" />
+          <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <router-link to="/">
@@ -50,7 +50,7 @@ export default {
     logout() {
       // await this.$store.dispatch('user/logout')
       removeToken()
-      this.$store.commit('SET_TOKEN', '')
+      this.$store.commit('user/SET_ROUTER', '')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }

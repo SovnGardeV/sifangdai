@@ -90,9 +90,11 @@ const actions = {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         commit('SET_TOKEN', '')
+        commit('SET_ROUTER', '')
         // commit('SET_NAME', name)
         localStorage.setItem('name', '')
         localStorage.setItem('number', '')
+        localStorage.setItem('id', '')
         removeToken()
         resetRouter()
         resolve()
@@ -115,7 +117,6 @@ const actions = {
     const { commercialName, commercialIphone, userType, commercialPassword } = userInfo
     return new Promise((resolve, reject) => {
       register({ commercialName, commercialIphone, userType, commercialPassword }).then(response => {
-        debugger
         const { errorCode } = response
         if (errorCode === '10000') {
           resolve()
