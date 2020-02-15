@@ -136,7 +136,7 @@
       </div>
 
       <div v-else style="text-align:center">
-        <img :key="showCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
+        <img :key="showCard.qrUrl" :src="showCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
         <div style="padding:20px;">
           <i class="el-icon-success" style="color:#18D78A" />
           分配成功
@@ -234,6 +234,7 @@ export default {
       })
     },
     initForm(form, formName) {
+      debugger
       const keyNameArr = Object.keys(form)
       keyNameArr.forEach(item => {
         if (item !== 'commercialNumber') form[item] = ''
