@@ -33,7 +33,12 @@
                 <el-table-column align="center" label="APP名称" prop="appName" />
                 <el-table-column align="center" label="白名单" prop="appWhiteList" />
                 <el-table-column align="center" label="回调地址" prop="appBackUrl" />
-                <el-table-column align="center" label="APPkey" prop="appKey" />
+                <el-table-column align="center" label="APPkey">
+                  <template slot-scope="scope">
+                    {{ scope.row.appKey }}
+                    <i class="el-icon-edit" style="cursor: pointer;" @click="editAPPKey(scope.row)" />
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" label="创建时间">
                   <template slot-scope="scope">
                     {{ new Date(scope.row.createTime).toLocaleString() }}
@@ -109,27 +114,51 @@
                 </el-form-item>
               </el-form>
             </el-tab-pane>
+            <el-tab-pane label="提现" name="fifth">
+              <el-form ref="witForm" :model="witForm" label-width="80px">
+                <el-form-item label="提现金额">
+                  <el-input v-model="witForm.witMoney" style="width:unset;" autocomplete="off" />
+                </el-form-item>
+                <el-form-item label="支付类型">
+                  <el-select v-model="witForm.payType">
+                    <el-option value="1" label="支付宝">支付宝</el-option>
+                    <el-option value="2" label="微信">微信</el-option>
+                    <el-option value="3" label="银行卡">银行卡</el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" size="mini" @click="handleWitForm">确定</el-button>
+                  <el-button size="mini" @click="activeName = 'first'">返回</el-button>
+                </el-form-item>
+              </el-form>
+            </el-tab-pane>
           </el-tabs>
 
         </el-card>
         <el-card style="height: 200px;">
           <el-row>
-            <el-col :span="8">
+            <el-col :span="6">
               <div class="dashboard-button" @click="activeName = 'second'">
                 <i class="el-icon-document-add" style="font-size: 40px;line-height: 80px;" />
                 <div style="color: #000;font-size: 14px;margin-top: 10px;">新增APP</div>
               </div>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="6">
               <div class="dashboard-button" @click="activeName = 'third'">
                 <i class="el-icon-lock" style="font-size: 40px;line-height: 80px;" />
                 <div style="color: #000;font-size: 14px;margin-top: 10px;">修改密码</div>
               </div>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="6">
               <div class="dashboard-button" @click="activeName = 'fourth'">
                 <i class="el-icon-tickets" style="font-size: 40px;line-height: 80px;" />
                 <div style="color: #000;font-size: 14px;margin-top: 10px;">设置白名单</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="dashboard-button" @click="activeName = 'fifth'">
+                <i class="el-icon-tickets" style="font-size: 40px;line-height: 80px;" />
+                <div style="color: #000;font-size: 14px;margin-top: 10px;">提现</div>
               </div>
             </el-col>
           </el-row>
@@ -168,7 +197,7 @@
 
 <script>
 // import { mapGetters } from 'vuex'
-import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp } from '@/api/user'
+import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey } from '@/api/user'
 import { uploadPicture } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
 
@@ -210,12 +239,20 @@ export default {
         })(),
         ips: ''
       },
+      witForm: {
+        commercialNumber: (_ => {
+          return localStorage.getItem('number')
+        })(),
+        witMoney: '',
+        payType: ''
+      },
       map: {
         commercialName: '商户名',
         commercialIphone: '商户手机号',
         commercialNumber: '商户号',
         commercialBalance: '商户余额',
         commercialRatio: '服务费收取比例',
+        commercialWithRatio: '提现比例',
         creationTime: '创建时间',
         updateTime: '	修改时间',
 
@@ -232,6 +269,29 @@ export default {
     this.getAPPListInfo()
   },
   methods: {
+    editAPPKey(item) {
+      this.$confirm('确定要修改' + item.appName + '的APPKey吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        setAPPKey({ appId: item.appId }).then(response => {
+          if (response.errorCode !== '10000') return
+          this.$message({
+            type: 'success',
+            message: '修改成功!'
+          })
+          this.getCommercialInfo()
+        }).catch(err => {
+          this.$message.error(err)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
     getCommercialInfo() {
       getUserInfo({
         commercialId: localStorage.getItem('id') || '182f04b9-b4e0-4515-8a09-b91c3397fadc',
@@ -296,6 +356,20 @@ export default {
 
         this.$message.success(response.mes)
         this.initForm(this.ipsForm)
+      }).catch(err => {
+        this.$message.error(err)
+      })
+    },
+    handleWitForm() {
+      const _form = Object.assign({}, this.witForm)
+      _form.witMoney = _form.witMoney * 100
+      applyWit(_form).then(response => {
+        if (response.errorCode !== '10000') {
+          return
+        }
+
+        this.$message.success(response.mes)
+        this.initForm(this.witForm)
       }).catch(err => {
         this.$message.error(err)
       })

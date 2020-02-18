@@ -37,10 +37,19 @@
           <el-table-column align="center" label="商户号" prop="commercialNumber" />
           <el-table-column align="center" label="服务费比例" prop="commercialRatio">
             <template slot-scope="scope">
-              <el-input v-if="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
-              <div v-else>
+              <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+              <div v-show="!scope.row.isEdit">
                 <span>{{ scope.row.commercialRatio }}</span>
                 <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editService(scope.row)" />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="提成服务费比例" prop="commercialRatio">
+            <template slot-scope="scope">
+              <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+              <div v-show="!scope.row.isWitEdit">
+                <span>{{ scope.row.commercialWithRatio }}</span>
+                <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editWitService(scope.row)" />
               </div>
             </template>
           </el-table-column>
@@ -140,7 +149,7 @@
 <script>
 import { getMenu, addRoleMenu } from '@/api/menu'
 import { bulidStr, handleIntoChildren } from '@/utils/index'
-import { getUserList, setRadio, insertIp, getUserInfo, getInfo, addUser } from '@/api/user'
+import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser } from '@/api/user'
 import Pagination from '@/components/Pagination'
 import { JSEncrypt } from 'jsencrypt'
 
@@ -166,6 +175,7 @@ export default {
         },
         form: {
           commercialNumber: '',
+          commercialWithRatio: '',
           ips: ''
         },
         addForm: {
@@ -203,6 +213,7 @@ export default {
       getUserList(_form).then(response => {
         response.commercialList.map(item => {
           item.isEdit = false
+          item.isWitEdit = false
         })
 
         this.mainTable.pager.total = response.total || 0
@@ -304,7 +315,19 @@ export default {
         this.$refs['editRadio'].focus()
       })
     },
+    editWitService(item) {
+      this.mainTable.commercialWithRatio = item.commercialWithRatio
+      item.isWitEdit = true
+      this.$nextTick(_ => {
+        this.$refs['editWitRadio'].focus()
+      })
+    },
     handleEditRadio(item) {
+      if (this.mainTable.commercialRatio === 0) {
+        item.isEdit = false
+        return
+      }
+
       const _form = {
         commercialId: item.commercialId,
         commercialRatio: this.mainTable.commercialRatio
@@ -318,6 +341,27 @@ export default {
         this.$message.error(err)
       }).finally(_ => {
         item.isEdit = false
+      })
+    },
+    handleEditWitRadio(item) {
+      if (this.mainTable.commercialWithRatio === 0) {
+        item.isWitEdit = false
+        return
+      }
+
+      const _form = {
+        commercialId: item.commercialId,
+        commercialWithRatio: this.mainTable.commercialWithRatio
+      }
+      setWitRadio(_form).then(response => {
+        if (response.errorCode !== '10000') {
+          return
+        }
+        this.getMainTableData()
+      }).catch(err => {
+        this.$message.error(err)
+      }).finally(_ => {
+        item.isWitEdit = false
       })
     },
     handleSubmitForm() {

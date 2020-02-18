@@ -32,7 +32,6 @@
     <el-card>
       <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
         <el-button size="mini" type="primary" @click="addQR">新增二维码</el-button>
-        <el-button size="mini" type="primary" @click="distributeQR">分配二维码</el-button>
       </el-col>
 
       <el-row :gutter="10">
@@ -93,65 +92,13 @@
       </div>
     </el-dialog>
 
-    <el-dialog width="400px" center title="分配二维码" :visible.sync="mainTable.dialogDistributeVisible">
-      <div v-if="!showCard.qrUrl">
-        <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px">
-          <el-form-item label="应用名称" prop="applicationName">
-            <el-input v-model="mainTable.distribuForm.applicationName" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="应用类型" prop="applicationType">
-            <el-select v-model="mainTable.distribuForm.applicationType" style="width:100%">
-              <el-option :value="1" label="代收">代收</el-option>
-              <el-option :value="2" label="代付">代付</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="外部订单号" prop="outId">
-            <el-input v-model="mainTable.distribuForm.outId" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="打款人姓名" prop="makerName">
-            <el-input v-model="mainTable.distribuForm.makerName" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="数量" prop="num">
-            <el-input v-model="mainTable.distribuForm.num" min="0" type="number" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="操作金额" prop="operatorMoney">
-            <el-input v-model="mainTable.distribuForm.operatorMoney" min="0" type="number" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="支付类型" prop="payType">
-            <el-select v-model="mainTable.distribuForm.payType" style="width:100%">
-              <el-option :value="1" label="支付宝">支付宝</el-option>
-              <el-option :value="2" label="微信">微信</el-option>
-              <el-option :value="3" label="银行卡">银行卡</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="订单标识" prop="remark">
-            <el-input v-model="mainTable.distribuForm.remark" autocomplete="off" />
-          </el-form-item>
-        </el-form>
-
-        <div slot="footer" class="dialog-footer" style="text-align:center">
-          <el-button size="mini" @click="mainTable.dialogDistributeVisible = false">取 消</el-button>
-          <el-button size="mini" type="primary" @click="handleDistributeQR">确 定</el-button>
-        </div>
-      </div>
-
-      <div v-else style="text-align:center">
-        <img :key="showCard.qrUrl" :src="showCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
-        <div style="padding:20px;">
-          <i class="el-icon-success" style="color:#18D78A" />
-          分配成功
-        </div>
-        <div style="font-size:48px;color:#F79709;font-weight:bold">{{ showCard.floatMoney }}</div>
-      </div>
-    </el-dialog>
-
   </div>
 </template>
 
 <script>
-import { uploadPicture, addQR, distributeQR, queryQrAll, updateEnableStatus } from '@/api/qrCode'
+import { uploadPicture, addQR, queryQrAll, updateEnableStatus } from '@/api/qrCode'
 import { bulidStr } from '@/utils/index'
-import cryptoJs from 'crypto-js'
+// import cryptoJs from 'crypto-js'
 
 export default {
   data() {
@@ -162,10 +109,6 @@ export default {
         '3': '银行卡',
         '4': '支付宝账号',
         '5': '微信账号'
-      },
-      showCard: {
-        qrUrl: '',
-        floatMoney: ''
       },
       mainTable: {
         array: [],
@@ -183,20 +126,6 @@ export default {
           receiptType: '',
           commercialNumber: localStorage.getItem('number')
         },
-        distribuForm: {
-          commercialNumber: localStorage.getItem('number'),
-          outId: '',
-          operatorMoney: '',
-          makerName: '',
-          num: '',
-          applicationType: '',
-          payType: '',
-          time: '',
-          sign: '',
-          remark: '',
-          applicationName: ''
-
-        },
         formRules: {
           qrUrl: [{ required: true, trigger: 'blur' }],
           enableStatus: [{ required: true, trigger: 'blur' }],
@@ -212,8 +141,7 @@ export default {
           payType: [{ required: true, trigger: 'blur' }],
           applicationName: [{ required: true, trigger: 'blur' }]
         },
-        dialogAddVisible: false,
-        dialogDistributeVisible: false
+        dialogAddVisible: false
       }
     }
   },
@@ -234,7 +162,6 @@ export default {
       })
     },
     initForm(form, formName) {
-      debugger
       const keyNameArr = Object.keys(form)
       keyNameArr.forEach(item => {
         if (item !== 'commercialNumber') form[item] = ''
@@ -268,11 +195,6 @@ export default {
         this.getQRList()
       })
     },
-    distributeQR() {
-      this.initForm(this.mainTable.distribuForm, 'distribuForm')
-
-      this.mainTable.dialogDistributeVisible = true
-    },
     getQRList() {
       const _form = {
         commercialNumber: localStorage.getItem('number'),
@@ -285,37 +207,8 @@ export default {
 
         this.mainTable.array = response.rows || []
       })
-    },
-    handleDistributeQR() {
-      this.mainTable.distribuForm.time = new Date().getTime()
-      const {
-        applicationName,
-        applicationType,
-        commercialNumber,
-        operatorMoney,
-        makerName,
-        num,
-        outId,
-        payType,
-        remark,
-        time
-      } = this.mainTable.distribuForm
-      const str = 'applicationName=' + applicationName + '&applicationType=' + applicationType +
-        '&commercialNumber=' + commercialNumber + '&makerName=' + makerName + '&num=' + num + '&operatorMoney=' + operatorMoney + '&outId=' + outId + '&payType=' + payType + '&remark=' + remark + '&time=' + time
-
-      this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
-      distributeQR(this.mainTable.distribuForm).then(response => {
-        if (response.errorCode !== '10000') {
-          return
-        }
-
-        this.showCard.qrUrl = response.qrUrl
-        this.showCard.floatMoney = response.floatMoney
-
-        // this.mainTable.dialogDistributeVisible = false
-        this.$message.success(response.mes)
-      })
     }
+
   }
 }
 </script>

@@ -111,3 +111,31 @@ export function addUser(data) {
     data
   })
 }
+
+export function setAPPKey(data) {
+  return request({
+    url: '/instead-pay-web/app/updAppKey',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function setWitRadio(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/setWitRadio',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function applyWit(data) {
+  return request({
+    url: '/instead-pay-web/orderInfo/applyWit',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+

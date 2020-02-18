@@ -59,7 +59,7 @@
 
       <div class="tips">
         <!-- <span @click.prevent="handleToRegister">账号注册</span> -->
-        <span style="float: right">忘记密码</span>
+        <!-- <span style="float: right">忘记密码</span> -->
       </div>
 
     </el-form>

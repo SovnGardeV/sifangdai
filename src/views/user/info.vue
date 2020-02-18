@@ -37,7 +37,13 @@
                     <div v-for="(value, key) in item" :key="key">
                       <div v-if="map[key]" style="margin-bottom: 15px">
                         <div class="before-line">{{ map[key] }}</div>
-                        <div>{{ value }}</div>
+                        <div v-if="key !== 'appKey'">{{ value }}</div>
+                        <div v-else>
+                          <span>
+                            {{ value }}
+                            <i class="el-icon-edit" style="cursor: pointer;" @click="editAPPKey(item)" />
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </el-scrollbar>
@@ -96,7 +102,7 @@
 
 <script>
 import { uploadPicture } from '@/api/qrCode'
-import { getUserInfo, addAPP } from '@/api/user'
+import { getUserInfo, addAPP, setAPPKey } from '@/api/user'
 
 export default {
   data() {
@@ -165,6 +171,28 @@ export default {
         this.$refs.addForm.clearValidate()
       })
     },
+    editAPPKey(item) {
+      this.$confirm('确定要修改' + item.appName + '的APPKey吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        setAPPKey({ appId: item.appId }).then(response => {
+          if (response.errorCode !== '10000') return
+          this.$message({
+            type: 'success',
+            message: '修改成功!'
+          })
+        }).catch(err => {
+          this.$message.error(err)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
     handleUploadPicture(file) {
       const formData = new FormData()
       formData.append('file', file)
@@ -177,13 +205,14 @@ export default {
     },
     handleAddAPP() {
       addAPP(this.mainTable.addForm).then(response => {
-        if (response.errCode !== '10000') return
+        if (response.errorCode !== '10000') return
 
         this.$message({
           type: 'success',
           message: response.mes
         })
         this.mainTable.dialogAddVisible = false
+        this.getMainTableData()
       })
     },
     filterList() {
@@ -282,7 +311,7 @@ export default {
   // background: url('../../assets/bg.jpg') no-repeat;
   background-size: cover;
   transition: .2s all;
-  cursor: pointer;
+  /* cursor: pointer; */
   position: relative;
   overflow: hidden;
 
