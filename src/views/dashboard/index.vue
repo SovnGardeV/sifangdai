@@ -157,7 +157,7 @@
             </el-col>
             <el-col :span="6">
               <div class="dashboard-button" @click="activeName = 'fifth'">
-                <i class="el-icon-tickets" style="font-size: 40px;line-height: 80px;" />
+                <i class="el-icon-s-finance" style="font-size: 40px;line-height: 80px;" />
                 <div style="color: #000;font-size: 14px;margin-top: 10px;">提现</div>
               </div>
             </el-col>

@@ -46,7 +46,7 @@
           </el-table-column>
           <el-table-column align="center" label="提成服务费比例" prop="commercialRatio">
             <template slot-scope="scope">
-              <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+              <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialWithRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
               <div v-show="!scope.row.isWitEdit">
                 <span>{{ scope.row.commercialWithRatio }}</span>
                 <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editWitService(scope.row)" />
@@ -167,6 +167,7 @@ export default {
         dialogAddVisible: false,
         dialogPermissionVisible: false,
         commercialRatio: 0,
+        commercialWithRatio: 0,
         row: {},
         filter: {
           commercialName: '',

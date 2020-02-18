@@ -113,7 +113,7 @@ export const asynRouter = [
         path: 'index',
         name: 'Form',
         component: () => import('@/views/form/index'),
-        meta: { title: '二维码管理', icon: 'nested' }
+        meta: { title: '收款方式管理', icon: 'nested' }
       }
     ]
   },
@@ -128,6 +128,20 @@ export const asynRouter = [
         component: () => import('@/views/nested/index'), // Parent router-view
         name: 'Menu1',
         meta: { title: '菜单管理', icon: 'tree' }
+      }
+    ]
+  },
+  {
+    path: '/config',
+    component: Layout,
+    redirect: '/config/index',
+    name: 'Config',
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/config/index'), // Parent router-view
+        name: 'Config1',
+        meta: { title: '配置管理', icon: 'config' }
       }
     ]
   },
