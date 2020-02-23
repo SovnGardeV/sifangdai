@@ -22,95 +22,98 @@
       </el-form>
     </el-card>
 
-    <el-card>
-      <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
-        <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
-      </el-col>
-      <!-- <el-button type="primary" size="mini" @click="confirmOrder">确认订单</el-button>
-      <el-button size="mini">取消订单</el-button> -->
-      <el-table
-        ref="mainTable"
-        v-loading="mainTable.loading"
-        class=""
-        :data="mainTable.array"
-        element-loading-text="加载中，请稍候"
-        element-loading-spinner="el-icon-loading"
-        border
-        stripe
-        fit
-        highlight-current-row
-      >
-        <!-- <el-table-column type="selection" /> -->
-        <el-table-column align="center" label="内部订单号" prop="orderId" />
-        <el-table-column align="center" label="外部订单号" prop="outId" />
-        <el-table-column align="center" label="商户号" prop="commercialNumber" />
-        <el-table-column align="center" label="操作金额">
-          <template slot-scope="scope">
-            {{ scope.row.operatorMoney / 100 }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="浮动金额">
-          <template slot-scope="scope">
-            {{ scope.row.floatMoney / 100 }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="代收/代付实际金额">
-          <template slot-scope="scope">
-            {{ scope.row.deductedMoney / 100 }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="订单状态">
-          <template slot-scope="scope">
-            {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="分配的二维码Id" prop="qrId" />
-        <el-table-column align="center" label="打款人" prop="makerName" />
-        <el-table-column align="center" label="订单标识" prop="remark" />
-        <el-table-column align="center" label="创建时间">
-          <template slot-scope="scope">
-            {{ new Date(scope.row.createTime).toLocaleString() }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="确认时间">
-          <template slot-scope="scope">
-            {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="操作人" prop="operatorName" />
-        <el-table-column align="center" label="应用名" prop="applicationName" />
-        <el-table-column align="center" label="数量" prop="num" />
-        <el-table-column align="center" label="应用类型">
-          <template slot-scope="scope">
-            {{ scope.row.applicationType == 1 ? '代收' : '代付' }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="支付类型">
-          <template slot-scope="scope">
-            {{ scope.row.payType == 1 ? '支付宝' : scope.row.orderStatus == 2 ? '微信' : '银行卡' }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="手动挂单">
-          <template slot-scope="scope">
-            {{ scope.row.isHand == 1 ? '是' : '否' }}
-          </template>
-        </el-table-column>
-        <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
-          <template slot-scope="scope">
-            <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-            <el-button size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
-          </template>
-        </el-table-column>
+    <el-tabs type="border-card">
+      <el-tab-pane label="代收">
+        <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
+          <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
+        </el-col>
+        <el-table
+          ref="mainTable"
+          v-loading="mainTable.loading"
+          class=""
+          :data="mainTable.array"
+          element-loading-text="加载中，请稍候"
+          element-loading-spinner="el-icon-loading"
+          border
+          stripe
+          fit
+          highlight-current-row
+        >
+          <el-table-column align="center" label="内部订单号" prop="orderId" />
+          <el-table-column align="center" label="外部订单号" prop="outId" />
+          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="操作金额">
+            <template slot-scope="scope">
+              {{ scope.row.operatorMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="浮动金额">
+            <template slot-scope="scope">
+              {{ scope.row.floatMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="代收/代付实际金额">
+            <template slot-scope="scope">
+              {{ scope.row.deductedMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="订单状态">
+            <template slot-scope="scope">
+              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="创建时间">
+            <template slot-scope="scope">
+              {{ new Date(scope.row.createTime).toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="确认时间">
+            <template slot-scope="scope">
+              {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <el-table-column align="center" label="类型" prop="applicationName">
+            <template slot-scope="scope">
+              {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="交易类型">
+            <template slot-scope="scope">
+              {{ scope.row.applicationType == 1 ? '代收' : '代付' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="支付方式">
+            <template slot-scope="scope">
+              {{ scope.row.payType == 1 ? '支付宝' : scope.row.orderStatus == 2 ? '微信' : '银行卡' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="手动挂单">
+            <template slot-scope="scope">
+              {{ scope.row.isHand == 1 ? '是' : '否' }}
+            </template>
+          </el-table-column>
+          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
+              <el-button size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
+            </template>
+          </el-table-column>
 
-      </el-table>
+        </el-table>
 
-      <pagination
-        :pager-size="mainTable.pager.size"
-        :pager-index="mainTable.pager.index"
-        :pager-total="mainTable.pager.total"
-        @pagination-change="handlePagerChange"
-      />
-    </el-card>
+        <pagination
+          :pager-size="mainTable.pager.size"
+          :pager-index="mainTable.pager.index"
+          :pager-total="mainTable.pager.total"
+          @pagination-change="handlePagerChange"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="代付">配置管理</el-tab-pane>
+      <el-tab-pane label="提现">角色管理</el-tab-pane>
+    </el-tabs>
 
     <el-dialog width="400px" center title="分配二维码" :visible.sync="mainTable.dialogDistributeVisible">
       <div v-if="!showCard.qrUrl">
