@@ -51,6 +51,7 @@
           </el-card>
         </el-col>
       </el-row>
+      <div v-show="mainTable.array.length === 0" style="line-height:200px;text-align:center;color:#999">暂无任何收款方式</div>
     </el-card>
 
     <el-dialog width="400px" center title="新增二维码" :visible.sync="mainTable.dialogAddVisible">
@@ -117,7 +118,8 @@ export default {
           enableStatus: '',
           bankAccount: '',
           receiptName: '',
-          receiptType: ''
+          receiptType: '',
+          commercialNumber: localStorage.getItem('number')
         },
         addForm: {
           qrUrl: '',

@@ -119,6 +119,11 @@
                 <el-form-item label="提现金额">
                   <el-input v-model="witForm.witMoney" style="width:unset;" autocomplete="off" />
                 </el-form-item>
+                <el-form-item label="收款方式">
+                  <el-select v-model="witForm.qrId">
+                    <el-option v-for="item in appListInfo.qrArray" :key="item.qrId" :value="item.qrId" :label="item.receiptName + ' | ' + item.bankAccount">{{ item.receiptName }} | {{ item.bankAccount }}</el-option>
+                  </el-select>
+                </el-form-item>
                 <el-form-item label="支付类型">
                   <el-select v-model="witForm.payType">
                     <el-option value="1" label="支付宝">支付宝</el-option>
@@ -198,8 +203,9 @@
 <script>
 // import { mapGetters } from 'vuex'
 import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey } from '@/api/user'
-import { uploadPicture } from '@/api/qrCode'
+import { uploadPicture, queryQrAll } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
+import { bulidStr } from '@/utils/index'
 
 export default {
   name: 'Dashboard',
@@ -208,7 +214,8 @@ export default {
       name: localStorage.getItem('name'),
       commercialInfo: {},
       appListInfo: {
-        appArray: []
+        appArray: [],
+        qrArray: []
       },
       activeName: 'first',
       addForm: {
@@ -267,8 +274,22 @@ export default {
   created() {
     this.getCommercialInfo()
     this.getAPPListInfo()
+    this.getQRList()
   },
   methods: {
+    getQRList() {
+      const _form = {
+        commercialNumber: localStorage.getItem('number'),
+        filter: ((filter) => {
+          return bulidStr(filter)
+        })({ commercialNumber: localStorage.getItem('number'), enableStatus: 1 })
+      }
+      queryQrAll(_form).then(response => {
+        if (response.errorCode !== '10000') return
+
+        this.appListInfo.qrArray = response.rows || []
+      })
+    },
     editAPPKey(item) {
       this.$confirm('确定要修改' + item.appName + '的APPKey吗？', '提示', {
         confirmButtonText: '确定',
@@ -300,6 +321,7 @@ export default {
         response.commercial.creationTime = new Date(response.commercial.creationTime).toLocaleString()
         response.commercial.updateTime = new Date(response.commercial.updateTime).toLocaleString()
         this.commercialInfo = response.commercial || {}
+        this.ipsForm.ips = response.ips
       })
     },
     getAPPListInfo() {
@@ -321,7 +343,7 @@ export default {
     },
     handleAddAPP() {
       addAPP(this.addForm).then(response => {
-        if (response.errCode !== '10000') return
+        if (response.errorCode !== '10000') return
 
         this.$message({
           type: 'success',
@@ -339,7 +361,7 @@ export default {
       _form.newPwd = encrypt.encrypt(_form.newPwd)
       delete _form.newPwd2
       modifyPassword(_form).then(response => {
-        if (response.errCode !== '10000') return
+        if (response.errorCode !== '10000') return
 
         this.$message({
           type: 'success',
@@ -361,6 +383,10 @@ export default {
       })
     },
     handleWitForm() {
+      if (!this.witForm.qrId || !this.witForm.payType) {
+        this.$message.info('请填写完整表格')
+        return
+      }
       const _form = Object.assign({}, this.witForm)
       _form.witMoney = _form.witMoney * 100
       applyWit(_form).then(response => {

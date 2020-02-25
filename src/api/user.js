@@ -139,3 +139,21 @@ export function applyWit(data) {
   })
 }
 
+export function getWhiteIp(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/getWhiteIp',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function getCodeName(data) {
+  return request({
+    url: '/instead-pay-web/app/getCodeName',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+

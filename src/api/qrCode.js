@@ -43,3 +43,12 @@ export function updateEnableStatus(data) {
     data
   })
 }
+
+export function getQrById(data) {
+  return request({
+    url: '/instead-pay-web/qr/getQrById',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}

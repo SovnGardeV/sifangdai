@@ -2,13 +2,13 @@
   <div class="app-container">
     <el-card class="filter-container">
       <el-form :inline="true" style="text-align:right">
-        <el-form-item>
+        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
           <el-input v-model="mainTable.filter.remark" placeholder="订单标识" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="$store.state.user.mode === 'admin'">
           <el-input v-model="mainTable.filter.commercialNumber" placeholder="商户号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
           <el-input v-model="mainTable.filter.outId" placeholder="外部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item>
@@ -22,10 +22,10 @@
       </el-form>
     </el-card>
 
-    <el-tabs type="border-card">
-      <el-tab-pane label="代收">
+    <el-tabs v-model="mainTable.filter.applicationType" type="border-card" @tab-click="handleTabClick">
+      <el-tab-pane label="代收" name="1">
         <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
-          <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
+          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代收付' : '手动挂单' }}</el-button>
         </el-col>
         <el-table
           ref="mainTable"
@@ -82,12 +82,100 @@
           </el-table-column>
           <el-table-column align="center" label="交易类型">
             <template slot-scope="scope">
-              {{ scope.row.applicationType == 1 ? '代收' : '代付' }}
+              {{ map.applicationType[scope.row.applicationType] }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="支付方式">
             <template slot-scope="scope">
-              {{ scope.row.payType == 1 ? '支付宝' : scope.row.orderStatus == 2 ? '微信' : '银行卡' }}
+              {{ map.payType[scope.row.payType ] }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="手动挂单">
+            <template slot-scope="scope">
+              {{ scope.row.isHand == 1 ? '是' : '否' }}
+            </template>
+          </el-table-column>
+          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
+              <el-button v-if="scope.row.applicationName" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
+            </template>
+          </el-table-column>
+
+        </el-table>
+
+        <pagination
+          :pager-size="mainTable.pager.size"
+          :pager-index="mainTable.pager.index"
+          :pager-total="mainTable.pager.total"
+          @pagination-change="handlePagerChange"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="代付" name="2">
+        <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
+          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代收付' : '手动挂单' }}</el-button>
+        </el-col>
+        <el-table
+          ref="mainTable"
+          v-loading="mainTable.loading"
+          class=""
+          :data="mainTable.array"
+          element-loading-text="加载中，请稍候"
+          element-loading-spinner="el-icon-loading"
+          border
+          stripe
+          fit
+          highlight-current-row
+        >
+          <el-table-column align="center" label="内部订单号" prop="orderId" />
+          <el-table-column align="center" label="外部订单号" prop="outId" />
+          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="操作金额">
+            <template slot-scope="scope">
+              {{ scope.row.operatorMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="浮动金额">
+            <template slot-scope="scope">
+              {{ scope.row.floatMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="代收/代付实际金额">
+            <template slot-scope="scope">
+              {{ scope.row.deductedMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="订单状态">
+            <template slot-scope="scope">
+              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="创建时间">
+            <template slot-scope="scope">
+              {{ new Date(scope.row.createTime).toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="确认时间">
+            <template slot-scope="scope">
+              {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <el-table-column align="center" label="类型" prop="applicationName">
+            <template slot-scope="scope">
+              {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="交易类型">
+            <template slot-scope="scope">
+              {{ map.applicationType[scope.row.applicationType] }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="支付方式">
+            <template slot-scope="scope">
+              {{ map.payType[scope.row.payType ] }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="手动挂单">
@@ -111,15 +199,116 @@
           @pagination-change="handlePagerChange"
         />
       </el-tab-pane>
-      <el-tab-pane label="代付">配置管理</el-tab-pane>
-      <el-tab-pane label="提现">角色管理</el-tab-pane>
+      <el-tab-pane label="提现" name="3">
+        <!-- <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
+          <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
+        </el-col> -->
+        <el-table
+          ref="mainTable"
+          v-loading="mainTable.loading"
+          class=""
+          :data="mainTable.array"
+          element-loading-text="加载中，请稍候"
+          element-loading-spinner="el-icon-loading"
+          border
+          stripe
+          fit
+          highlight-current-row
+        >
+          <el-table-column align="center" label="内部订单号" prop="orderId" />
+          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="操作金额">
+            <template slot-scope="scope">
+              {{ scope.row.operatorMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="浮动金额">
+            <template slot-scope="scope">
+              {{ scope.row.floatMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="代收/代付实际金额">
+            <template slot-scope="scope">
+              {{ scope.row.deductedMoney / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="订单状态">
+            <template slot-scope="scope">
+              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="创建时间">
+            <template slot-scope="scope">
+              {{ new Date(scope.row.createTime).toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="确认时间">
+            <template slot-scope="scope">
+              {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <el-table-column align="center" label="类型" prop="applicationName">
+            <template slot-scope="scope">
+              {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="支付方式">
+            <template slot-scope="scope">
+              {{ map.payType[scope.row.payType ] }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="手动挂单">
+            <template slot-scope="scope">
+              {{ scope.row.isHand == 1 ? '是' : '否' }}
+            </template>
+          </el-table-column>
+          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
+              <el-button size="mini" type="primary" plain @click="cashMethod(scope.row.qrId)">提现方式</el-button>
+            </template>
+          </el-table-column>
+
+        </el-table>
+
+        <pagination
+          :pager-size="mainTable.pager.size"
+          :pager-index="mainTable.pager.index"
+          :pager-total="mainTable.pager.total"
+          @pagination-change="handlePagerChange"
+        />
+      </el-tab-pane>
     </el-tabs>
+
+    <el-dialog width="400px" center title="提现方式" :visible.sync="mainTable.dialogMethodVisible">
+      <div v-if="mainTable.qrInfo.qrId" style="text-align:center">
+        <img :src="mainTable.qrInfo.qrUrl" width="200px" height="200px" alt="">
+        <div style="line-height:30px;margin: 10px 0">
+          账号：{{ mainTable.qrInfo.bankAccount }}
+        </div>
+        <el-row style="line-height:30px">
+          <el-col :span="12">
+            <div style="border-right:1px solid #ccc">{{ mainTable.qrInfo.receiptName }}</div>
+          </el-col>
+          <el-col :span="12">
+            <div>{{ map.receiptType[mainTable.qrInfo.receiptType] }}</div>
+          </el-col>
+        </el-row>
+      </div>
+      <div v-else class="empty-info">
+        暂无信息
+      </div>
+    </el-dialog>
 
     <el-dialog width="400px" center title="分配二维码" :visible.sync="mainTable.dialogDistributeVisible">
       <div v-if="!showCard.qrUrl">
         <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px">
           <el-form-item label="应用名称" prop="applicationName">
-            <el-input v-model="mainTable.distribuForm.applicationName" autocomplete="off" />
+            <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
+              <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appName" :label="item.appName">{{ item.appName }}</el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="应用类型" prop="applicationType">
             <el-select v-model="mainTable.distribuForm.applicationType" style="width:100%">
@@ -172,7 +361,8 @@
 <script>
 import { bulidStr } from '@/utils/index'
 import { getOrderList, affirmOrder, callBackByHand } from '@/api/order'
-import { distributeQR } from '@/api/qrCode'
+import { getCodeName } from '@/api/user'
+import { distributeQR, getQrById } from '@/api/qrCode'
 import Pagination from '@/components/Pagination'
 import cryptoJs from 'crypto-js'
 
@@ -186,14 +376,36 @@ export default {
         qrUrl: '',
         floatMoney: ''
       },
+      map: {
+        applicationType: {
+          1: '代收',
+          2: '代付',
+          3: '提现'
+        },
+        payType: {
+          1: '支付宝',
+          2: '微信',
+          3: '银行卡'
+        },
+        receiptType: {
+          1: '支付宝二维码',
+          2: '微信二维码',
+          3: '银行卡',
+          4: '支付宝账号',
+          5: '微信账号'
+        }
+      },
       mainTable: {
         dialogDistributeVisible: false,
+        dialogMethodVisible: false,
         loading: false,
         filter: {
           commercialName: '',
           commercialIphone: '',
-          commercialNumber: ''
+          commercialNumber: '',
+          applicationType: '1'
         },
+        appArray: [],
         distribuForm: {
           commercialNumber: localStorage.getItem('number'),
           outId: '',
@@ -208,6 +420,13 @@ export default {
           applicationName: ''
 
         },
+        qrInfo: {
+          qrId: '',
+          qrUrl: '',
+          receiptName: '',
+          receiptType: '',
+          bankAccount: ''
+        },
         array: [],
         pager: {
           index: 1,
@@ -218,9 +437,32 @@ export default {
     }
   },
   created() {
+    this.getAPP()
     this.getMainTableData()
   },
   methods: {
+    getAPP() {
+      getCodeName({ commercialNumber: localStorage.getItem('number') }).then(response => {
+        if (response.errorCode !== '10000') return
+
+        this.mainTable.appArray = response.rows
+      })
+    },
+    cashMethod(id) {
+      this.mainTable.dialogMethodVisible = true
+      if (!id) return
+
+      getQrById({ id }).then(response => {
+        Object.assign(this.mainTable.qrInfo, response.data)
+      })
+    },
+    handleTabClick() {
+      const keyNameArr = Object.keys(this.mainTable.filter)
+      keyNameArr.forEach(item => {
+        if (item !== 'applicationType') this.mainTable.filter[item] = ''
+      })
+      this.getMainTableData()
+    },
     distributeQR() {
       this.initForm(this.mainTable.distribuForm, 'distribuForm')
 
@@ -332,5 +574,10 @@ export default {
     margin-bottom: 0;
   }
 }
-
+.empty-info{
+  text-align: center;
+  color: #ccc;
+  line-height: 100px;
+  height: 100px;
+}
 </style>

@@ -40,7 +40,12 @@
         <!-- <el-table-column type="selection" /> -->
         <el-table-column align="center" label="配置名称" prop="cfgName" />
         <el-table-column align="center" label="配置名" prop="cfgKey" />
-        <el-table-column align="center" label="配置值" prop="cfgValue" />
+        <el-table-column align="center" :show-overflow-tooltip="true" label="配置值" prop="cfgValue" />
+        <el-table-column align="center" label="配置等级" prop="cfgType">
+          <template slot-scope="scope">
+            {{ map.cfgType[scope.row.cfgType] }}
+          </template>
+        </el-table-column>
         <el-table-column align="center" label="备注" prop="cfgRemark" />
         <el-table-column align="center" label="操作" width="200px">
           <template slot-scope="scope">
@@ -71,6 +76,12 @@
           <el-form-item label="配置值">
             <el-input v-model="mainTable.form.cfgValue" autocomplete="off" />
           </el-form-item>
+          <el-form-item label="配置等级">
+            <el-select v-model="mainTable.form.cfgType" style="width:100%;">
+              <el-option value="1" label="普通配置">普通配置</el-option>
+              <el-option value="2" label="秘钥配置">秘钥配置</el-option>
+            </el-select>
+          </el-form-item>
           <el-form-item label="备注">
             <el-input v-model="mainTable.form.cfgRemark" type="textarea" autocomplete="off" />
           </el-form-item>
@@ -95,6 +106,12 @@
           <el-form-item label="配置值">
             <el-input v-model="mainTable.form.cfgValue" autocomplete="off" />
           </el-form-item>
+          <el-form-item label="配置等级">
+            <el-select v-model="mainTable.form.cfgType" style="width:100%;">
+              <el-option :value="1" label="普通配置">普通配置</el-option>
+              <el-option :value="2" label="秘钥配置">秘钥配置</el-option>
+            </el-select>
+          </el-form-item>
           <el-form-item label="备注">
             <el-input v-model="mainTable.form.cfgRemark" type="textarea" autocomplete="off" />
           </el-form-item>
@@ -113,6 +130,7 @@
 import { bulidStr } from '@/utils/index'
 import { getConfig, addConfig, editConfig, delConfig } from '@/api/config'
 import Pagination from '@/components/Pagination'
+import { JSEncrypt } from 'jsencrypt'
 
 export default {
   components: {
@@ -124,10 +142,17 @@ export default {
         qrUrl: '',
         floatMoney: ''
       },
+      map: {
+        cfgType: {
+          1: '普通配置',
+          2: '秘钥配置'
+        }
+      },
       mainTable: {
         dialogAddVisible: false,
         dialogEditVisible: false,
         loading: false,
+        cache: {},
         filter: {
           cfgName: '',
           cfgKey: '',
@@ -137,6 +162,7 @@ export default {
           cfgName: '',
           cfgKey: '',
           cfgValue: '',
+          cfgType: '',
           cfgRemark: ''
         },
         array: [],
@@ -159,7 +185,7 @@ export default {
     },
     showEdit(item) {
       Object.assign(this.mainTable.form, item)
-
+      this.mainTable.cache = item
       this.mainTable.dialogEditVisible = true
     },
     initForm(form) {
@@ -196,7 +222,13 @@ export default {
       })
     },
     handleAddCommon() {
-      addConfig(this.mainTable.form).then(response => {
+      const _form = Object.assign({}, this.mainTable.form)
+      if (this.mainTable.form.cfgType === '2') {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(localStorage.getItem('publicKey'))
+        _form.cfgValue = encrypt.encrypt(_form.cfgValue)
+      }
+      addConfig(_form).then(response => {
         if (response.errorCode !== '10000') return
 
         this.$message.success(response.mes)
@@ -206,7 +238,13 @@ export default {
       })
     },
     handleEditCommon() {
-      editConfig(this.mainTable.form).then(response => {
+      const _form = Object.assign({}, this.mainTable.form)
+      if (this.mainTable.cache.cfgValue !== this.mainTable.form.cfgValue && this.mainTable.form.cfgType === '2') {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(localStorage.getItem('publicKey'))
+        _form.cfgValue = encrypt.encrypt(_form.cfgValue)
+      }
+      editConfig(_form).then(response => {
         if (response.errorCode !== '10000') return
 
         this.$message.success(response.mes)

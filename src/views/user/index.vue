@@ -65,7 +65,7 @@
           </el-table-column>
           <el-table-column align="center" label="操作" width="260px">
             <template slot-scope="scope">
-              <el-button type="primary" size="mini" @click="mainTable.dialogFormVisible = true;mainTable.form.commercialNumber = scope.row.commercialNumber">设置白名单</el-button>
+              <el-button type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
               <el-button plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
               <el-button plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
 
@@ -149,7 +149,7 @@
 <script>
 import { getMenu, addRoleMenu } from '@/api/menu'
 import { bulidStr, handleIntoChildren } from '@/utils/index'
-import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser } from '@/api/user'
+import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser, getWhiteIp } from '@/api/user'
 import Pagination from '@/components/Pagination'
 import { JSEncrypt } from 'jsencrypt'
 
@@ -201,6 +201,14 @@ export default {
     if (this.$route.name === 'UserList') this.getMainTableData()
   },
   methods: {
+    setWhiteList(item) {
+      this.mainTable.form.commercialNumber = item.commercialNumber
+      getWhiteIp({ commercialNumber: item.commercialNumber }).then(response => {
+        if (response.errorCode !== '10000') return
+        this.mainTable.form.ips = response.data
+        this.mainTable.dialogFormVisible = true
+      })
+    },
     getMainTableData() {
       this.mainTable.loading = true
       const _form = {

@@ -56,7 +56,7 @@
               </div>
             </el-col>
           </el-row>
-          <div v-if="mainTable.array.length === 0">
+          <div v-if="mainTable.array.length === 0" style="width:100%;text-align:center;line-height:100px;color:#999">
             暂无APP
           </div>
         </el-card>
