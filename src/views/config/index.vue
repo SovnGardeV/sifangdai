@@ -78,8 +78,8 @@
           </el-form-item>
           <el-form-item label="配置等级">
             <el-select v-model="mainTable.form.cfgType" style="width:100%;">
-              <el-option value="1" label="普通配置">普通配置</el-option>
-              <el-option value="2" label="秘钥配置">秘钥配置</el-option>
+              <el-option :value="1" label="普通配置">普通配置</el-option>
+              <el-option :value="2" label="秘钥配置">秘钥配置</el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="备注">
@@ -223,7 +223,7 @@ export default {
     },
     handleAddCommon() {
       const _form = Object.assign({}, this.mainTable.form)
-      if (this.mainTable.form.cfgType === '2') {
+      if (this.mainTable.form.cfgType === 2) {
         const encrypt = new JSEncrypt()
         encrypt.setPublicKey(localStorage.getItem('publicKey'))
         _form.cfgValue = encrypt.encrypt(_form.cfgValue)
@@ -239,7 +239,7 @@ export default {
     },
     handleEditCommon() {
       const _form = Object.assign({}, this.mainTable.form)
-      if (this.mainTable.cache.cfgValue !== this.mainTable.form.cfgValue && this.mainTable.form.cfgType === '2') {
+      if ((this.mainTable.cache.cfgValue !== this.mainTable.form.cfgValue) && (this.mainTable.form.cfgType === 2)) {
         const encrypt = new JSEncrypt()
         encrypt.setPublicKey(localStorage.getItem('publicKey'))
         _form.cfgValue = encrypt.encrypt(_form.cfgValue)

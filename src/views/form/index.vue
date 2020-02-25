@@ -129,19 +129,19 @@ export default {
           commercialNumber: localStorage.getItem('number')
         },
         formRules: {
-          qrUrl: [{ required: true, trigger: 'blur' }],
-          enableStatus: [{ required: true, trigger: 'blur' }],
-          receiptName: [{ required: true, trigger: 'blur' }],
-          receiptType: [{ required: true, trigger: 'blur' }],
+          qrUrl: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          enableStatus: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          receiptName: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          receiptType: [{ required: true, trigger: 'blur', message: '必填项目' }],
 
-          commercialNumber: [{ required: true, trigger: 'blur' }],
-          operatorMoney: [{ required: true, trigger: 'blur' }],
-          makerName: [{ required: true, trigger: 'blur' }],
-          num: [{ required: true, trigger: 'blur' }],
-          outId: [{ required: true, trigger: 'blur' }],
-          applicationType: [{ required: true, trigger: 'blur' }],
-          payType: [{ required: true, trigger: 'blur' }],
-          applicationName: [{ required: true, trigger: 'blur' }]
+          commercialNumber: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          operatorMoney: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          makerName: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          num: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          outId: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          applicationType: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          payType: [{ required: true, trigger: 'blur', message: '必填项目' }],
+          applicationName: [{ required: true, trigger: 'blur', message: '必填项目' }]
         },
         dialogAddVisible: false
       }
@@ -188,13 +188,17 @@ export default {
       })
     },
     handleAddQR() {
-      addQR(this.mainTable.addForm).then(response => {
-        this.$message({
-          type: 'success',
-          message: response.mes
-        })
-        this.mainTable.dialogAddVisible = false
-        this.getQRList()
+      this.$refs.addForm.validate(valid => {
+        if (valid) {
+          addQR(this.mainTable.addForm).then(response => {
+            this.$message({
+              type: 'success',
+              message: response.mes
+            })
+            this.mainTable.dialogAddVisible = false
+            this.getQRList()
+          })
+        }
       })
     },
     getQRList() {
