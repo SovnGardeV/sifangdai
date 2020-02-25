@@ -56,7 +56,7 @@
 
     <el-dialog width="400px" center title="新增二维码" :visible.sync="mainTable.dialogAddVisible">
       <el-form ref="addForm" :model="mainTable.addForm" :rules="mainTable.formRules">
-        <el-form-item label="二维码路径" label-width="100px" prop="qrUrl">
+        <el-form-item label="二维码路径" label-width="100px">
           <el-upload
             class="avatar-uploader"
             action=""
@@ -190,14 +190,18 @@ export default {
     handleAddQR() {
       this.$refs.addForm.validate(valid => {
         if (valid) {
-          addQR(this.mainTable.addForm).then(response => {
-            this.$message({
-              type: 'success',
-              message: response.mes
+          if (this.mainTable.addForm.qrUrl || this.mainTable.addForm.bankAccount) {
+            addQR(this.mainTable.addForm).then(response => {
+              this.$message({
+                type: 'success',
+                message: response.mes
+              })
+              this.mainTable.dialogAddVisible = false
+              this.getQRList()
             })
-            this.mainTable.dialogAddVisible = false
-            this.getQRList()
-          })
+          } else {
+            this.$message.info('请填写二维码或账号')
+          }
         }
       })
     },
