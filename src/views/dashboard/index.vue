@@ -175,25 +175,25 @@
       <el-col :span="6">
         <el-card>
           <div class="admin-title">今日代收金额</div>
-          <div class="admin-number">0</div>
+          <div class="admin-number">{{ homeInfo.allMoney || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">订单数量</div>
-          <div class="admin-number">0</div>
+          <div class="admin-number">{{ homeInfo.count || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">成功数量</div>
-          <div class="admin-number">0</div>
+          <div class="admin-number">{{ homeInfo.passCount || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">失败数量</div>
-          <div class="admin-number">0</div>
+          <div class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -202,7 +202,7 @@
 
 <script>
 // import { mapGetters } from 'vuex'
-import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey } from '@/api/user'
+import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo } from '@/api/user'
 import { uploadPicture, queryQrAll } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
 import { bulidStr } from '@/utils/index'
@@ -212,6 +212,7 @@ export default {
   data() {
     return {
       name: localStorage.getItem('name'),
+      homeInfo: {},
       commercialInfo: {},
       appListInfo: {
         appArray: [],
@@ -272,11 +273,21 @@ export default {
     }
   },
   created() {
-    this.getCommercialInfo()
-    this.getAPPListInfo()
-    this.getQRList()
+    if (this.$store.state.user.mode === 'operator') {
+      this.getCommercialInfo()
+      this.getAPPListInfo()
+      this.getQRList()
+    } else {
+      this.getHomeInfo()
+    }
   },
   methods: {
+    getHomeInfo() {
+      getHomeInfo().then(response => {
+        if (response.errorCode !== '10000') return
+        this.homeInfo = response.data || {}
+      })
+    },
     getQRList() {
       const _form = {
         commercialNumber: localStorage.getItem('number'),
@@ -354,20 +365,22 @@ export default {
       })
     },
     handleModifyPwd() {
-      const _form = Object.assign({}, this.modifyForm)
-      const encrypt = new JSEncrypt()
-      encrypt.setPublicKey(localStorage.getItem('publicKey'))
-      _form.oldPwd = encrypt.encrypt(_form.oldPwd)
-      _form.newPwd = encrypt.encrypt(_form.newPwd)
-      delete _form.newPwd2
-      modifyPassword(_form).then(response => {
-        if (response.errorCode !== '10000') return
+      this.$store.dispatch('user/getPublicKey').then(response => {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.modifyForm)
+        _form.oldPwd = encrypt.encrypt(_form.oldPwd)
+        _form.newPwd = encrypt.encrypt(_form.newPwd)
+        delete _form.newPwd2
+        modifyPassword(_form).then(response => {
+          if (response.errorCode !== '10000') return
 
-        this.$message({
-          type: 'success',
-          message: response.mes
+          this.$message({
+            type: 'success',
+            message: response.mes
+          })
+          this.initForm(this.modifyForm)
         })
-        this.initForm(this.modifyForm)
       })
     },
     handleIpsForm() {

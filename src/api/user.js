@@ -157,3 +157,10 @@ export function getCodeName(data) {
   })
 }
 
+export function getHomeInfo() {
+  return request({
+    url: '/instead-pay-web/orderInfo/getHome',
+    method: 'post'
+  })
+}
+

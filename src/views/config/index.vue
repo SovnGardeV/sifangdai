@@ -222,35 +222,39 @@ export default {
       })
     },
     handleAddCommon() {
-      const _form = Object.assign({}, this.mainTable.form)
-      if (this.mainTable.form.cfgType === 2) {
+      this.$store.dispatch('user/getPublicKey').then(response => {
         const encrypt = new JSEncrypt()
-        encrypt.setPublicKey(localStorage.getItem('publicKey'))
-        _form.cfgValue = encrypt.encrypt(_form.cfgValue)
-      }
-      addConfig(_form).then(response => {
-        if (response.errorCode !== '10000') return
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.mainTable.form)
+        if (this.mainTable.form.cfgType === 2) {
+          _form.cfgValue = encrypt.encrypt(_form.cfgValue)
+        }
+        addConfig(_form).then(response => {
+          if (response.errorCode !== '10000') return
 
-        this.$message.success(response.mes)
+          this.$message.success(response.mes)
 
-        this.mainTable.dialogAddVisible = false
-        this.getMainTableData()
+          this.mainTable.dialogAddVisible = false
+          this.getMainTableData()
+        })
       })
     },
     handleEditCommon() {
-      const _form = Object.assign({}, this.mainTable.form)
-      if ((this.mainTable.cache.cfgValue !== this.mainTable.form.cfgValue) && (this.mainTable.form.cfgType === 2)) {
+      this.$store.dispatch('user/getPublicKey').then(response => {
         const encrypt = new JSEncrypt()
-        encrypt.setPublicKey(localStorage.getItem('publicKey'))
-        _form.cfgValue = encrypt.encrypt(_form.cfgValue)
-      }
-      editConfig(_form).then(response => {
-        if (response.errorCode !== '10000') return
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.mainTable.form)
+        if ((this.mainTable.cache.cfgValue !== this.mainTable.form.cfgValue) && (this.mainTable.form.cfgType === 2)) {
+          _form.cfgValue = encrypt.encrypt(_form.cfgValue)
+        }
+        editConfig(_form).then(response => {
+          if (response.errorCode !== '10000') return
 
-        this.$message.success(response.mes)
+          this.$message.success(response.mes)
 
-        this.mainTable.dialogEditVisible = false
-        this.getMainTableData()
+          this.mainTable.dialogEditVisible = false
+          this.getMainTableData()
+        })
       })
     },
     getMainTableData() {
