@@ -302,19 +302,21 @@ export default {
       this.mainTable.dialogAddVisible = true
     },
     handleAddForm() {
-      const _form = Object.assign({}, this.mainTable.addForm)
-      const encrypt = new JSEncrypt()
-      encrypt.setPublicKey(localStorage.getItem('publicKey'))
-      _form.commercialPassword = encrypt.encrypt(_form.commercialPassword)
-      addUser(_form).then(response => {
-        if (response.errorCode !== '10000') {
-          return
-        }
+      this.$store.dispatch('user/getPublicKey').then(response => {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.mainTable.addForm)
+        _form.commercialPassword = encrypt.encrypt(_form.commercialPassword)
+        addUser(_form).then(response => {
+          if (response.errorCode !== '10000') {
+            return
+          }
 
-        this.$message.success(response.mes)
-        this.mainTable.dialogAddVisible = false
-      }).catch(err => {
-        this.$message.error(err)
+          this.$message.success(response.mes)
+          this.mainTable.dialogAddVisible = false
+        }).catch(err => {
+          this.$message.error(err)
+        })
       })
     },
     editService(item) {
