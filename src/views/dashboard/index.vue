@@ -390,7 +390,7 @@ export default {
         }
 
         this.$message.success(response.mes)
-        this.initForm(this.ipsForm)
+        // this.initForm(this.ipsForm)
       }).catch(err => {
         this.$message.error(err)
       })

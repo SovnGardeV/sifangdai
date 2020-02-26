@@ -29,7 +29,12 @@ router.beforeEach(async(to, from, next) => {
     } else {
       const hasGetUserInfo = store.getters.router
       if (hasGetUserInfo) {
-        next()
+        if (store.state.user.mode !== localStorage.getItem('role')) {
+          location.reload()
+          next()
+        } else {
+          next()
+        }
       } else {
         try {
           // get user info
