@@ -95,10 +95,11 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
-          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+          <el-table-column align="center" label="操作" min-width="240px">
             <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-              <el-button v-if="scope.row.applicationName" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
+              <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
+              <el-button size="mini" plain type="primary" @click="showCheck(scope.row.orderId)">查看</el-button>
+              <el-button v-if="$store.state.user.mode === 'admin' && scope.row.applicationName" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
             </template>
           </el-table-column>
 
@@ -183,10 +184,12 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
-          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+          <el-table-column align="center" label="操作" min-width="240px">
             <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-              <el-button size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
+
+              <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
+              <el-button size="mini" plain type="primary" @click="showCheck(scope.row.orderId)">查看</el-button>
+              <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
             </template>
           </el-table-column>
 
@@ -355,6 +358,16 @@
         <div style="font-size:48px;color:#F79709;font-weight:bold">{{ showCard.floatMoney }}</div>
       </div>
     </el-dialog>
+
+    <el-dialog width="400px" center title="查看" :visible.sync="mainTable.dialogCheckVisible">
+      <div v-if="showCard.qrUrl" style="text-align:center">
+        <img :key="showCard.qrUrl" :src="showCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
+        <div style="font-size:48px;color:#F79709;font-weight:bold">{{ showCard.floatMoney }}</div>
+      </div>
+      <div v-else class="empty-info">
+        暂无信息
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -362,7 +375,7 @@
 import { bulidStr } from '@/utils/index'
 import { getOrderList, affirmOrder, callBackByHand } from '@/api/order'
 import { getCodeName } from '@/api/user'
-import { distributeQR, getQrById } from '@/api/qrCode'
+import { distributeQR, getQrById, getQrByOrderId } from '@/api/qrCode'
 import Pagination from '@/components/Pagination'
 import cryptoJs from 'crypto-js'
 
@@ -398,6 +411,7 @@ export default {
       mainTable: {
         dialogDistributeVisible: false,
         dialogMethodVisible: false,
+        dialogCheckVisible: false,
         loading: false,
         filter: {
           commercialName: '',
@@ -441,6 +455,13 @@ export default {
     this.getMainTableData()
   },
   methods: {
+    showCheck(orderId) {
+      this.mainTable.dialogCheckVisible = true
+      getQrByOrderId({ orderId }).then(response => {
+        if (response.errorCode !== '10000') return
+        this.showCard = response.data || {}
+      })
+    },
     getAPP() {
       getCodeName({ commercialNumber: localStorage.getItem('number') }).then(response => {
         if (response.errorCode !== '10000') return
@@ -450,7 +471,16 @@ export default {
     },
     cashMethod(id) {
       this.mainTable.dialogMethodVisible = true
-      if (!id) return
+      if (!id) {
+        this.mainTable.qrInfo = {
+          qrId: '',
+          qrUrl: '',
+          receiptName: '',
+          receiptType: '',
+          bankAccount: ''
+        }
+        return
+      }
 
       getQrById({ id }).then(response => {
         Object.assign(this.mainTable.qrInfo, response.data)

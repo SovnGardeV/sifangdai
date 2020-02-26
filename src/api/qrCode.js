@@ -52,3 +52,12 @@ export function getQrById(data) {
     data
   })
 }
+
+export function getQrByOrderId(data) {
+  return request({
+    url: '/instead-pay-web/qr/getQrByOrderId',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
