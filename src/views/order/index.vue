@@ -267,10 +267,10 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
-          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作" width="200px">
+          <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作">
             <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-              <el-button size="mini" type="primary" plain @click="cashMethod(scope.row.qrId)">提现方式</el-button>
+              <!-- <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button> -->
+              <el-button size="mini" type="primary" plain @click="cashMethod(scope.row)">订单详情</el-button>
             </template>
           </el-table-column>
 
@@ -285,7 +285,7 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog width="400px" center title="提现方式" :visible.sync="mainTable.dialogMethodVisible">
+    <el-dialog width="400px" center title="订单详情" :visible.sync="mainTable.dialogMethodVisible">
       <div v-if="mainTable.qrInfo.qrId" style="text-align:center">
         <img :src="mainTable.qrInfo.qrUrl" width="200px" height="200px" alt="">
         <div style="line-height:30px;margin: 10px 0">
@@ -293,7 +293,7 @@
         </div>
         <el-row style="line-height:30px">
           <el-col :span="12">
-            <div style="border-right:1px solid #ccc">{{ mainTable.qrInfo.receiptName }}</div>
+            <div style="border-right:1px solid #eee">{{ mainTable.qrInfo.receiptName }}</div>
           </el-col>
           <el-col :span="12">
             <div>{{ map.receiptType[mainTable.qrInfo.receiptType] }}</div>
@@ -302,6 +302,23 @@
       </div>
       <div v-else class="empty-info">
         暂无信息
+      </div>
+      <div style="border-top: 1px solid #eee;padding-top:20px;margin-top:20px;">
+        <el-row v-show="!isReject">
+          <el-col :span="12" style="text-align:center">
+            <el-button size="mini" type="primary" @click="confirmOrder(cache.orderId, 1)">确认订单</el-button>
+          </el-col>
+          <el-col :span="12" style="text-align:center">
+            <el-button size="mini" type="danger" @click="isReject = true">驳回订单</el-button>
+          </el-col>
+        </el-row>
+        <div v-show="isReject">
+          <el-input v-model="mainTable.reason" type="textarea" rows="4" placeholder="请输入驳回理由" />
+          <div style="text-align:center;margin-top: 10px">
+            <el-button size="mini" @click="confirmOrder(cache.orderId, 3)">确认</el-button>
+            <el-button size="mini" @click="isReject = false">返回</el-button>
+          </div>
+        </div>
       </div>
     </el-dialog>
 
@@ -385,10 +402,12 @@ export default {
   },
   data() {
     return {
+      isReject: false,
       showCard: {
         qrUrl: '',
         floatMoney: ''
       },
+      cache: {},
       map: {
         applicationType: {
           1: '代收',
@@ -413,6 +432,7 @@ export default {
         dialogMethodVisible: false,
         dialogCheckVisible: false,
         loading: false,
+        reason: '',
         filter: {
           commercialName: '',
           commercialIphone: '',
@@ -469,9 +489,12 @@ export default {
         this.mainTable.appArray = response.rows
       })
     },
-    cashMethod(id) {
+    cashMethod(item) {
       this.mainTable.dialogMethodVisible = true
-      if (!id) {
+      this.cache = item || {}
+      this.isReject = false
+      this.mainTable.reason = ''
+      if (!item.qrId) {
         this.mainTable.qrInfo = {
           qrId: '',
           qrUrl: '',
@@ -482,7 +505,7 @@ export default {
         return
       }
 
-      getQrById({ id }).then(response => {
+      getQrById({ id: item.qrId }).then(response => {
         Object.assign(this.mainTable.qrInfo, response.data)
       })
     },
@@ -563,9 +586,14 @@ export default {
       this.getMainTableData()
     },
     confirmOrder(orderId, confirm) {
+      if (confirm === 3 && !this.mainTable.reason) {
+        this.$message.info('请填写驳回理由')
+        return
+      }
       const _form = {
         orderId,
-        affirmType: confirm,
+        status: confirm,
+        reason: confirm === 3 ? this.mainTable.reason : undefined,
         commercialNumber: localStorage.getItem('number')
       }
 
@@ -576,6 +604,7 @@ export default {
 
         this.$message.success(response.mes)
         this.getMainTableData()
+        this.mainTable.dialogMethodVisible = false
       }).catch(err => {
         this.$message.error(err)
       })
