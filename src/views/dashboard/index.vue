@@ -175,25 +175,25 @@
       <el-col :span="6">
         <el-card>
           <div class="admin-title">今日代收金额</div>
-          <div class="admin-number">{{ homeInfo.allMoney || 0 }}</div>
+          <div id="allMoney" class="admin-number">{{ homeInfo.allMoney || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">订单数量</div>
-          <div class="admin-number">{{ homeInfo.count || 0 }}</div>
+          <div id="count" class="admin-number">{{ homeInfo.count || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">成功数量</div>
-          <div class="admin-number">{{ homeInfo.passCount || 0 }}</div>
+          <div id="passCount" class="admin-number">{{ homeInfo.passCount || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card>
           <div class="admin-title">失败数量</div>
-          <div class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
+          <div id="cancelCount" class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -205,14 +205,19 @@
 import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo } from '@/api/user'
 import { uploadPicture, queryQrAll } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
-import { bulidStr } from '@/utils/index'
+import { bulidStr, numRunFun } from '@/utils/index'
 
 export default {
   name: 'Dashboard',
   data() {
     return {
       name: localStorage.getItem('name'),
-      homeInfo: {},
+      homeInfo: {
+        allMoney: 0,
+        count: 0,
+        passCount: 0,
+        cancelCount: 0
+      },
       commercialInfo: {},
       appListInfo: {
         appArray: [],
@@ -285,7 +290,11 @@ export default {
     getHomeInfo() {
       getHomeInfo().then(response => {
         if (response.errorCode !== '10000') return
-        this.homeInfo = response.data || {}
+        numRunFun(0, response.data.allMoney, document.querySelector('#allMoney'))
+        numRunFun(0, response.data.count, document.querySelector('#count'))
+        numRunFun(0, response.data.passCount, document.querySelector('#passCount'))
+        numRunFun(0, response.data.cancelCount, document.querySelector('#cancelCount'))
+        // this.homeInfo = response.data || {}
       })
     },
     getQRList() {
