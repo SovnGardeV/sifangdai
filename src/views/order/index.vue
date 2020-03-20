@@ -377,9 +377,9 @@
     </el-dialog>
 
     <el-dialog width="400px" center title="查看" :visible.sync="mainTable.dialogCheckVisible">
-      <div v-if="showCard.qrUrl" style="text-align:center">
-        <img :key="showCard.qrUrl" :src="showCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
-        <div style="font-size:48px;color:#F79709;font-weight:bold">{{ showCard.floatMoney }}</div>
+      <div v-if="orderShowCard.qrUrl" style="text-align:center">
+        <img :key="orderShowCard.qrUrl" :src="orderShowCard.qrUrl" style="border: 1px dashed #999;padding:4px;border-radius:4px" width="240px" height="240px" alt="">
+        <div style="font-size:48px;color:#F79709;font-weight:bold">{{ orderShowCard.floatMoney }}</div>
       </div>
       <div v-else class="empty-info">
         暂无信息
@@ -404,6 +404,10 @@ export default {
     return {
       isReject: false,
       showCard: {
+        qrUrl: '',
+        floatMoney: ''
+      },
+      orderShowCard: {
         qrUrl: '',
         floatMoney: ''
       },
@@ -479,7 +483,7 @@ export default {
       this.mainTable.dialogCheckVisible = true
       getQrByOrderId({ orderId }).then(response => {
         if (response.errorCode !== '10000') return
-        this.showCard = response.data || {}
+        this.orderShowCard = response.data || {}
       })
     },
     getAPP() {
