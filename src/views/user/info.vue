@@ -322,7 +322,7 @@ export default {
     .app-info-name{
       color: #fff;
       transform: translateY(-2em);
-      font-size: 20px;
+      // font-size: 20px;
     }
     .app-info-detail{
       top: 0;

@@ -7,4 +7,4 @@ var server = http.createServer((req, res) => {
   res.end('node test web')
 })
 
-server.listen(3000, '192.168.0.125')
+server.listen(3000, '192.168.0.126')

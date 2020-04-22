@@ -98,7 +98,7 @@
           <el-table-column align="center" label="操作" min-width="240px">
             <template slot-scope="scope">
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-              <el-button size="mini" plain type="primary" @click="showCheck(scope.row.orderId)">查看</el-button>
+              <el-button size="mini" plain type="primary" @click="showCheck(scope.row)">查看</el-button>
               <el-button v-if="$store.state.user.mode === 'admin' && scope.row.applicationName" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
             </template>
           </el-table-column>
@@ -188,7 +188,7 @@
             <template slot-scope="scope">
 
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
-              <el-button size="mini" plain type="primary" @click="showCheck(scope.row.orderId)">查看</el-button>
+              <el-button size="mini" plain type="primary" @click="showCheck(scope.row)">查看</el-button>
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
             </template>
           </el-table-column>
@@ -479,12 +479,13 @@ export default {
     this.getMainTableData()
   },
   methods: {
-    showCheck(orderId) {
+    showCheck(item) {
+      this.orderShowCard.qrUrl = item.remitUrl
       this.mainTable.dialogCheckVisible = true
-      getQrByOrderId({ orderId }).then(response => {
-        if (response.errorCode !== '10000') return
-        this.orderShowCard = response.data || {}
-      })
+      // getQrByOrderId({ orderId }).then(response => {
+      //   if (response.errorCode !== '10000') return
+      //   this.orderShowCard = response.data || {}
+      // })
     },
     getAPP() {
       getCodeName({ commercialNumber: localStorage.getItem('number') }).then(response => {
