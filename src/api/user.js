@@ -132,7 +132,16 @@ export function setWitRadio(data) {
 
 export function applyWit(data) {
   return request({
-    url: '/instead-pay-web/orderInfo/applyWit',
+    url: '/instead-pay-web/qr/replacePay',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}
+
+export function getCashWit(data) {
+  return request({
+    url: '/instead-pay-web/orderInfo/mayCashWit',
     method: 'post',
     'Content-Type': 'multipart/form-data',
     data

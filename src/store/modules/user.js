@@ -6,7 +6,7 @@ import { resetRouter } from '@/router'
 const state = {
   token: getToken(),
   name: '',
-  avatar: 'https://iconfont.alicdn.com/t/1562932918092.jpg@100h_100w.jpg',
+  avatar: '',
   router: '',
   mode: localStorage.getItem('role')
 }

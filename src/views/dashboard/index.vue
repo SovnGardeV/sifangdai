@@ -9,7 +9,7 @@
               <span v-if="map[key]" style="line-height: 50px;">
                 <span style="color: #4E5BF2;font-weight: bold;font-size: 12px;">{{ map[key] }}</span>
                 <div class="line" />
-                <span style="font-size: 18px;">{{ value }}</span>
+                <span style="font-size: 18px;">{{ key === 'commercialBalance' ? (value / 100) : value }}</span>
               </span>
             </div>
           </div>
@@ -116,11 +116,34 @@
               </el-form>
             </el-tab-pane>
             <el-tab-pane label="提现" name="fifth">
-              <el-form ref="witForm" :model="witForm" label-width="80px">
-                <el-form-item label="提现金额">
-                  <el-input v-model="witForm.witMoney" style="width:unset;" autocomplete="off" />
+              <el-form ref="witForm" :model="witForm" label-width="110px">
+                <el-form-item label="用户名称">
+                  <el-input v-model="witForm.userName" style="width:unset;" autocomplete="off" />
                 </el-form-item>
-                <el-form-item label="收款方式">
+                <el-form-item label="银行账号">
+                  <el-input v-model="witForm.bankAccount" style="width:unset;" autocomplete="off" />
+                </el-form-item>
+                <el-form-item label="银行名称">
+                  <el-input v-model="witForm.bankName" style="width:unset;" autocomplete="off" />
+                </el-form-item>
+                <el-form-item label="开户分行">
+                  <el-input v-model="witForm.bankAddress" style="width:unset;" autocomplete="off" />
+                </el-form-item>
+                <el-form-item label="银行绑定手机号">
+                  <el-input v-model="witForm.bankPhone" style="width:unset;" autocomplete="off" />
+                </el-form-item>
+
+                <el-form-item label="提现金额">
+                  <el-input v-model="witForm.operatorMoney" style="width:unset;" autocomplete="off">
+                    <div slot="append">
+                      当前最大可提现余额为 {{ cashWit / 100 }}
+                    </div>
+                  </el-input>
+                </el-form-item>
+                <!-- <el-form-item label="备注说明">
+                  <el-input v-model="witForm.witMoney" type="textarea" :rows="2" style="width:400px;" autocomplete="off" />
+                </el-form-item> -->
+                <!-- <el-form-item label="收款方式">
                   <el-select v-model="witForm.qrId">
                     <el-option v-for="item in appListInfo.qrArray" :key="item.qrId" :value="item.qrId" :label="item.receiptName + ' | ' + item.bankAccount">{{ item.receiptName }} | {{ item.bankAccount }}</el-option>
                   </el-select>
@@ -131,7 +154,7 @@
                     <el-option value="2" label="银行卡">银行卡</el-option>
                     <el-option value="3" label="微信">微信</el-option>
                   </el-select>
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item>
                   <el-button type="primary" size="mini" @click="handleWitForm">确定</el-button>
                   <el-button size="mini" @click="activeName = 'first'">返回</el-button>
@@ -162,7 +185,7 @@
               </div>
             </el-col>
             <el-col :span="6">
-              <div class="dashboard-button" @click="activeName = 'fifth'">
+              <div class="dashboard-button" @click="activeName = 'fifth';getCommercialInfo();getCashWit()">
                 <i class="el-icon-s-finance" style="font-size: 40px;line-height: 80px;" />
                 <div style="color: #000;font-size: 14px;margin-top: 10px;">提现</div>
               </div>
@@ -203,7 +226,7 @@
 
 <script>
 // import { mapGetters } from 'vuex'
-import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo } from '@/api/user'
+import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo, getCashWit } from '@/api/user'
 import { uploadPicture, queryQrAll } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
 import { bulidStr, numRunFun } from '@/utils/index'
@@ -257,8 +280,13 @@ export default {
         commercialNumber: (_ => {
           return localStorage.getItem('number')
         })(),
-        witMoney: '',
-        payType: ''
+        userName: '',
+        bankAccount: '',
+        bankName: '',
+        bankAddress: '',
+        UserPhone: '',
+        operatorMoney: '',
+        payType: 2
       },
       map: {
         commercialName: '商户名',
@@ -275,7 +303,8 @@ export default {
         appIsPut: '是否上架',
         createTime: '创建时间',
         appKey: 'appKey'
-      }
+      },
+      cashWit: 0
     }
   },
   created() {
@@ -288,6 +317,14 @@ export default {
     }
   },
   methods: {
+    getCashWit() {
+      getCashWit({
+        commercialNumber: localStorage.getItem('number')
+      }).then(response => {
+        if (response.errorCode !== '10000') return
+        this.cashWit = response.data || 0
+      })
+    },
     getHomeInfo() {
       getHomeInfo().then(response => {
         if (response.errorCode !== '10000') return
@@ -406,12 +443,8 @@ export default {
       })
     },
     handleWitForm() {
-      if (!this.witForm.qrId || !this.witForm.payType) {
-        this.$message.info('请填写完整表格')
-        return
-      }
       const _form = Object.assign({}, this.witForm)
-      _form.witMoney = _form.witMoney * 100
+      _form.operatorMoney = _form.operatorMoney * 100
       applyWit(_form).then(response => {
         if (response.errorCode !== '10000') {
           return

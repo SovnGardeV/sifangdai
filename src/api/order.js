@@ -20,7 +20,7 @@ export function affirmOrder(data) {
 
 export function callBackByHand(data) {
   return request({
-    url: '/instead-pay-web/orderInfo/callBackByHand',
+    url: '/instead-pay-web/orderInfo/syncCallBck',
     method: 'post',
     'Content-Type': 'multipart/form-data',
     data

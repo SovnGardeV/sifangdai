@@ -15,6 +15,16 @@
           <el-input v-model="mainTable.filter.orderId" placeholder="内部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item>
+          <el-select v-model="mainTable.filter.orderStatus" placeholder="订单状态" size="mini" clearable>
+            <el-option v-for="(value, key) in map.orderStatus" :key="key" :value="key" :label="value">{{ value }}</el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
+          <el-select v-model="mainTable.filter.backStatus" placeholder="回调状态" size="mini" clearable>
+            <el-option v-for="(value, key) in map.backStatus" :key="key" :value="key" :label="value">{{ value }}</el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" size="mini" @click="mainTable.pager.index = 1;getMainTableData()">
             <i class="el-icon-search" />
           </el-button>
@@ -62,8 +72,18 @@
               {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="回调状态">
+            <template slot-scope="scope">
+              {{ map.backStatus[scope.row.backStatus] }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" label="打款人" prop="makerName" /> -->
           <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="服务费" prop="outRatio">
+            <template slot-scope="scope">
+              {{ (scope.row.outRatio || 0) / 100 }}
+            </template>
+          </el-table-column>
           <el-table-column align="center" label="创建时间">
             <template slot-scope="scope">
               {{ new Date(scope.row.createTime).toLocaleString() }}
@@ -75,11 +95,11 @@
             </template>
           </el-table-column>
           <el-table-column align="center" label="操作人" prop="operatorName" />
-          <el-table-column align="center" label="类型" prop="applicationName">
+          <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="交易类型">
             <template slot-scope="scope">
               {{ map.applicationType[scope.row.applicationType] }}
@@ -95,7 +115,7 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作" min-width="240px">
+          <el-table-column align="center" label="操作" width="260">
             <template slot-scope="scope">
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
               <el-button size="mini" plain type="primary" @click="showCheck(scope.row)">查看</el-button>
@@ -151,8 +171,18 @@
               {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="回调状态">
+            <template slot-scope="scope">
+              {{ map.backStatus[scope.row.backStatus] }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" label="打款人" prop="makerName" /> -->
           <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="服务费" prop="outRatio">
+            <template slot-scope="scope">
+              {{ (scope.row.outRatio || 0) / 100 }}
+            </template>
+          </el-table-column>
           <el-table-column align="center" label="创建时间">
             <template slot-scope="scope">
               {{ new Date(scope.row.createTime).toLocaleString() }}
@@ -164,11 +194,11 @@
             </template>
           </el-table-column>
           <el-table-column align="center" label="操作人" prop="operatorName" />
-          <el-table-column align="center" label="类型" prop="applicationName">
+          <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="交易类型">
             <template slot-scope="scope">
               {{ map.applicationType[scope.row.applicationType] }}
@@ -184,7 +214,7 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作" min-width="240px">
+          <el-table-column align="center" label="操作" width="260">
             <template slot-scope="scope">
 
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
@@ -240,7 +270,12 @@
               {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="打款人" prop="makerName" />
+          <el-table-column align="center" label="服务费" prop="outRatio">
+            <template slot-scope="scope">
+              {{ (scope.row.outRatio || 0) / 100 }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" label="打款人" prop="makerName" /> -->
           <el-table-column align="center" label="创建时间">
             <template slot-scope="scope">
               {{ new Date(scope.row.createTime).toLocaleString() }}
@@ -252,11 +287,11 @@
             </template>
           </el-table-column>
           <el-table-column align="center" label="操作人" prop="operatorName" />
-          <el-table-column align="center" label="类型" prop="applicationName">
+          <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="支付方式">
             <template slot-scope="scope">
               {{ map.payType[scope.row.payType ] }}
@@ -267,6 +302,7 @@
               {{ scope.row.isHand == 1 ? '是' : '否' }}
             </template>
           </el-table-column>
+          <el-table-column align="center" label="理由" prop="remark4" />
           <el-table-column v-if="$store.state.user.mode === 'admin'" align="center" label="操作">
             <template slot-scope="scope">
               <!-- <el-button size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button> -->
@@ -327,7 +363,7 @@
         <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px">
           <el-form-item label="应用名称" prop="applicationName">
             <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
-              <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appName" :label="item.appName">{{ item.appName }}</el-option>
+              <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appId" :label="item.appName">{{ item.appName }}</el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="应用类型" prop="applicationType">
@@ -339,9 +375,9 @@
           <el-form-item label="外部订单号" prop="outId">
             <el-input v-model="mainTable.distribuForm.outId" autocomplete="off" />
           </el-form-item>
-          <el-form-item label="打款人姓名" prop="makerName">
+          <!-- <el-form-item label="打款人姓名" prop="makerName">
             <el-input v-model="mainTable.distribuForm.makerName" autocomplete="off" />
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="数量" prop="num">
             <el-input v-model="mainTable.distribuForm.num" min="0" type="number" autocomplete="off" />
           </el-form-item>
@@ -432,6 +468,11 @@ export default {
           2: '待承兑',
           3: '已过期'
         },
+        backStatus: {
+          0: '未回调',
+          1: '回调成功',
+          2: '回调失败'
+        },
         receiptType: {
           1: '支付宝二维码',
           2: '微信二维码',
@@ -450,6 +491,7 @@ export default {
           commercialName: '',
           commercialIphone: '',
           commercialNumber: '',
+          orderStatus: '',
           applicationType: '1'
         },
         appArray: [],
@@ -606,37 +648,50 @@ export default {
         this.$message.info('请填写驳回理由')
         return
       }
-      const _form = {
-        orderId,
-        status: confirm,
-        reason: confirm === 3 ? this.mainTable.reason : undefined,
-        commercialNumber: localStorage.getItem('number')
-      }
 
-      affirmOrder(_form).then(response => {
-        if (response.errorCode !== '10000') {
-          return
+      this.$confirm('确定要修改订单吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const _form = {
+          orderId,
+          status: confirm,
+          reason: confirm === 3 ? this.mainTable.reason : undefined,
+          commercialNumber: localStorage.getItem('number')
         }
 
-        this.$message.success(response.mes)
-        this.getMainTableData()
-        this.mainTable.dialogMethodVisible = false
-      }).catch(err => {
-        this.$message.error(err)
+        affirmOrder(_form).then(response => {
+          if (response.errorCode !== '10000') {
+            return
+          }
+
+          this.$message.success(response.mes)
+          this.getMainTableData()
+          this.mainTable.dialogMethodVisible = false
+        }).catch(err => {
+          this.$message.error(err)
+        })
       })
     },
     callBackByHand(orderId) {
-      callBackByHand({
-        orderId,
-        commercialNumber: localStorage.getItem('number')
-      }).then(response => {
-        if (response.errorCode !== '10000') {
-          return
-        }
-
-        this.$message.success(response.mes)
-      }).catch(err => {
-        this.$message.error(err)
+      this.$confirm('确定要手动回调吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        callBackByHand({
+          orderId
+        // commercialNumber: localStorage.getItem('number')
+        }).then(response => {
+          if (response.errorCode !== '10000') {
+            return
+          }
+          this.getMainTableData()
+          this.$message.success(response.mes)
+        }).catch(err => {
+          this.$message.error(err)
+        })
       })
     }
   }

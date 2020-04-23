@@ -153,7 +153,7 @@ export function numRunFun(num, maxNum, r) {
   let numText = num
   let golb // 为了清除requestAnimationFrame
   function numSlideFun() {
-    numText += 0.8 // 速度的计算可以为小数
+    numText += (maxNum * 0.03) // 速度的计算可以为小数
     if (numText >= maxNum) {
       numText = maxNum
       cancelAnimationFrame(golb)

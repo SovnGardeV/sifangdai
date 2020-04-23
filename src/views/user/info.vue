@@ -12,7 +12,7 @@
                 <div class="info-tip">
                   {{ map[key] }}
                 </div>
-                {{ value }}
+                {{ key === 'commercialBalance' ? (value / 100) : value }}
               </span>
             </div>
           </div>
