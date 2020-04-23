@@ -59,7 +59,7 @@
           </el-table-column>
           <el-table-column align="center" label="订单状态">
             <template slot-scope="scope">
-              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+              {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="打款人" prop="makerName" />
@@ -148,7 +148,7 @@
           </el-table-column>
           <el-table-column align="center" label="订单状态">
             <template slot-scope="scope">
-              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+              {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="打款人" prop="makerName" />
@@ -237,7 +237,7 @@
           </el-table-column>
           <el-table-column align="center" label="订单状态">
             <template slot-scope="scope">
-              {{ scope.row.orderStatus == 0 ? '已取消' : scope.row.orderStatus == 1 ? '已确认' : '待确认' }}
+              {{ map.orderStatus[scope.row.orderStatus] }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="打款人" prop="makerName" />
@@ -351,12 +351,15 @@
           <el-form-item label="支付类型" prop="payType">
             <el-select v-model="mainTable.distribuForm.payType" style="width:100%">
               <el-option :value="1" label="支付宝">支付宝</el-option>
-              <el-option :value="2" label="微信">微信</el-option>
-              <el-option :value="3" label="银行卡">银行卡</el-option>
+              <el-option :value="2" label="银行卡">银行卡</el-option>
+              <el-option :value="3" label="微信">微信</el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="订单标识" prop="remark">
             <el-input v-model="mainTable.distribuForm.remark" autocomplete="off" />
+          </el-form-item>
+          <el-form-item label="回调地址" prop="callBackUrl">
+            <el-input v-model="mainTable.distribuForm.callBackUrl" autocomplete="off" />
           </el-form-item>
         </el-form>
 
@@ -392,7 +395,7 @@
 import { bulidStr } from '@/utils/index'
 import { getOrderList, affirmOrder, callBackByHand } from '@/api/order'
 import { getCodeName } from '@/api/user'
-import { distributeQR, getQrById, getQrByOrderId } from '@/api/qrCode'
+import { distributeQR, getQrById } from '@/api/qrCode'
 import Pagination from '@/components/Pagination'
 import cryptoJs from 'crypto-js'
 
@@ -420,8 +423,14 @@ export default {
         },
         payType: {
           1: '支付宝',
-          2: '微信',
-          3: '银行卡'
+          2: '银行卡',
+          3: '微信'
+        },
+        orderStatus: {
+          0: '已关闭',
+          1: '已承兑',
+          2: '待承兑',
+          3: '已过期'
         },
         receiptType: {
           1: '支付宝二维码',
@@ -455,6 +464,7 @@ export default {
           time: '',
           sign: '',
           remark: '',
+          callBackUrl: '',
           applicationName: ''
 
         },
@@ -541,6 +551,7 @@ export default {
       const {
         applicationName,
         applicationType,
+        callBackUrl,
         commercialNumber,
         operatorMoney,
         makerName,
@@ -550,8 +561,8 @@ export default {
         remark,
         time
       } = this.mainTable.distribuForm
-      const str = 'applicationName=' + applicationName + '&applicationType=' + applicationType +
-        '&commercialNumber=' + commercialNumber + '&makerName=' + makerName + '&num=' + num + '&operatorMoney=' + operatorMoney + '&outId=' + outId + '&payType=' + payType + '&remark=' + remark + '&time=' + time
+      const str = 'applicationName=' + applicationName + '&applicationType=' + applicationType + '&callBackUrl' + callBackUrl +
+        '&commercialNumber=' + commercialNumber + '&makerName=' + makerName + '&num=' + num + '&operatorMoney=' + (operatorMoney * 100) + '&outId=' + outId + '&payType=' + payType + '&remark=' + remark + '&time=' + time
 
       this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
       distributeQR(this.mainTable.distribuForm).then(response => {
@@ -560,7 +571,7 @@ export default {
         }
 
         this.showCard.qrUrl = response.qrUrl
-        this.showCard.floatMoney = response.floatMoney
+        this.showCard.floatMoney = response.floatMoney / 100
 
         // this.mainTable.dialogDistributeVisible = false
         this.$message.success(response.mes)

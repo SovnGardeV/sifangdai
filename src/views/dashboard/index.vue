@@ -29,7 +29,8 @@
                 fit
                 highlight-current-row
               >
-                <el-table-column align="center" label="商户号" prop="commercialNumber" />
+                <!-- <el-table-column align="center" label="商户号" prop="commercialNumber" /> -->
+                <el-table-column align="center" label="APPID" prop="appId" />
                 <el-table-column align="center" label="APP名称" prop="appName" />
                 <el-table-column align="center" label="白名单" prop="appWhiteList" />
                 <el-table-column align="center" label="回调地址" prop="appBackUrl" />
@@ -127,8 +128,8 @@
                 <el-form-item label="支付类型">
                   <el-select v-model="witForm.payType">
                     <el-option value="1" label="支付宝">支付宝</el-option>
-                    <el-option value="2" label="微信">微信</el-option>
-                    <el-option value="3" label="银行卡">银行卡</el-option>
+                    <el-option value="2" label="银行卡">银行卡</el-option>
+                    <el-option value="3" label="微信">微信</el-option>
                   </el-select>
                 </el-form-item>
                 <el-form-item>
@@ -175,7 +176,7 @@
       <el-col :span="6">
         <el-card>
           <div class="admin-title">今日代收金额</div>
-          <div id="allMoney" class="admin-number">{{ homeInfo.allMoney || 0 }}</div>
+          <div id="allMoney" class="admin-number">{{ (homeInfo.allMoney / 100) || 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
@@ -290,7 +291,7 @@ export default {
     getHomeInfo() {
       getHomeInfo().then(response => {
         if (response.errorCode !== '10000') return
-        numRunFun(0, response.data.allMoney, document.querySelector('#allMoney'))
+        numRunFun(0, response.data.allMoney / 100, document.querySelector('#allMoney'))
         numRunFun(0, response.data.count, document.querySelector('#count'))
         numRunFun(0, response.data.passCount, document.querySelector('#passCount'))
         numRunFun(0, response.data.cancelCount, document.querySelector('#cancelCount'))

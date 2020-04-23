@@ -313,6 +313,7 @@ export default {
           }
 
           this.$message.success(response.mes)
+          this.getMainTableData()
           this.mainTable.dialogAddVisible = false
         }).catch(err => {
           this.$message.error(err)

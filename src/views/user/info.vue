@@ -85,9 +85,9 @@
         <!-- <el-form-item label="APPkey" label-width="100px" prop="appKey">
           <el-input v-model="mainTable.addForm.appKey" autocomplete="off" />
         </el-form-item> -->
-        <el-form-item label="回调地址" label-width="100px" prop="appBackUrl">
+        <!-- <el-form-item label="回调地址" label-width="100px" prop="appBackUrl">
           <el-input v-model="mainTable.addForm.appBackUrl" autocomplete="off" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="白名单" label-width="100px" prop="appWhiteList">
           <el-input v-model="mainTable.addForm.appWhiteList" type="textarea" autocomplete="off" />
         </el-form-item>
