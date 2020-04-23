@@ -118,7 +118,7 @@
             <el-tab-pane label="提现" name="fifth">
               <el-form ref="witForm" :model="witForm" label-width="110px">
                 <el-form-item label="用户名称">
-                  <el-input v-model="witForm.userName" style="width:unset;" autocomplete="off" />
+                  <el-input v-model="witForm.bankUserName" style="width:unset;" autocomplete="off" />
                 </el-form-item>
                 <el-form-item label="银行账号">
                   <el-input v-model="witForm.bankAccount" style="width:unset;" autocomplete="off" />
@@ -280,11 +280,11 @@ export default {
         commercialNumber: (_ => {
           return localStorage.getItem('number')
         })(),
-        userName: '',
+        bankUserName: '',
         bankAccount: '',
         bankName: '',
         bankAddress: '',
-        UserPhone: '',
+        bankPhone: '',
         operatorMoney: '',
         payType: 2
       },

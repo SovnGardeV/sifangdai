@@ -57,11 +57,11 @@
               {{ scope.row.operatorMoney / 100 }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="浮动金额">
+          <!-- <el-table-column align="center" label="浮动金额">
             <template slot-scope="scope">
               {{ scope.row.floatMoney / 100 }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
               {{ scope.row.deductedMoney / 100 }}
@@ -156,11 +156,11 @@
               {{ scope.row.operatorMoney / 100 }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="浮动金额">
+          <!-- <el-table-column align="center" label="浮动金额">
             <template slot-scope="scope">
               {{ scope.row.floatMoney / 100 }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
               {{ scope.row.deductedMoney / 100 }}
@@ -255,11 +255,11 @@
               {{ scope.row.operatorMoney / 100 }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="浮动金额">
+          <!-- <el-table-column align="center" label="浮动金额">
             <template slot-scope="scope">
               {{ scope.row.floatMoney / 100 }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
               {{ scope.row.deductedMoney / 100 }}
@@ -358,45 +358,66 @@
       </div>
     </el-dialog>
 
-    <el-dialog width="400px" center title="分配二维码" :visible.sync="mainTable.dialogDistributeVisible">
+    <el-dialog :width="(mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2) ? '750px' : '400px'" center title="发起代收付" :visible.sync="mainTable.dialogDistributeVisible">
       <div v-if="!showCard.qrUrl">
-        <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px">
-          <el-form-item label="应用名称" prop="applicationName">
-            <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
-              <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appId" :label="item.appName">{{ item.appName }}</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="应用类型" prop="applicationType">
-            <el-select v-model="mainTable.distribuForm.applicationType" style="width:100%">
-              <el-option :value="1" label="代收">代收</el-option>
-              <el-option :value="2" label="代付">代付</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="外部订单号" prop="outId">
-            <el-input v-model="mainTable.distribuForm.outId" autocomplete="off" />
-          </el-form-item>
-          <!-- <el-form-item label="打款人姓名" prop="makerName">
+        <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px" size="small">
+          <el-row :gutter="10">
+            <el-col :span="(mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2) ? 12 : 24">
+              <el-form-item label="应用名称" prop="applicationName">
+                <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
+                  <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appId" :label="item.appName">{{ item.appName }}</el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="应用类型" prop="applicationType">
+                <el-select v-model="mainTable.distribuForm.applicationType" style="width:100%">
+                  <el-option :value="1" label="代收">代收</el-option>
+                  <el-option :value="2" label="代付">代付</el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="外部订单号" prop="outId">
+                <el-input v-model="mainTable.distribuForm.outId" autocomplete="off" />
+              </el-form-item>
+              <!-- <el-form-item label="打款人姓名" prop="makerName">
             <el-input v-model="mainTable.distribuForm.makerName" autocomplete="off" />
           </el-form-item> -->
-          <el-form-item label="数量" prop="num">
-            <el-input v-model="mainTable.distribuForm.num" min="0" type="number" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="操作金额" prop="operatorMoney">
-            <el-input v-model="mainTable.distribuForm.operatorMoney" min="0" type="number" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="支付类型" prop="payType">
-            <el-select v-model="mainTable.distribuForm.payType" style="width:100%">
-              <el-option :value="1" label="支付宝">支付宝</el-option>
-              <el-option :value="2" label="银行卡">银行卡</el-option>
-              <el-option :value="3" label="微信">微信</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="订单标识" prop="remark">
-            <el-input v-model="mainTable.distribuForm.remark" autocomplete="off" />
-          </el-form-item>
-          <el-form-item label="回调地址" prop="callBackUrl">
-            <el-input v-model="mainTable.distribuForm.callBackUrl" autocomplete="off" />
-          </el-form-item>
+              <el-form-item label="数量" prop="num">
+                <el-input v-model="mainTable.distribuForm.num" min="0" type="number" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="操作金额" prop="operatorMoney">
+                <el-input v-model="mainTable.distribuForm.operatorMoney" min="0" type="number" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="支付类型" prop="payType">
+                <el-select v-model="mainTable.distribuForm.payType" style="width:100%">
+                  <el-option :value="1" label="支付宝">支付宝</el-option>
+                  <el-option :value="2" label="银行卡">银行卡</el-option>
+                  <el-option :value="3" label="微信">微信</el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="订单标识">
+                <el-input v-model="mainTable.distribuForm.remark" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="回调地址" prop="callBackUrl">
+                <el-input v-model="mainTable.distribuForm.callBackUrl" autocomplete="off" />
+              </el-form-item>
+            </el-col>
+            <el-col v-if="mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2" :span="12">
+              <el-form-item label="用户名称">
+                <el-input v-model="mainTable.distribuForm.bankUserName" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="银行卡">
+                <el-input v-model="mainTable.distribuForm.bankAccount" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="银行名称">
+                <el-input v-model="mainTable.distribuForm.bankName" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="开户分行">
+                <el-input v-model="mainTable.distribuForm.bankAddress" autocomplete="off" />
+              </el-form-item>
+              <el-form-item label="银行绑定手机">
+                <el-input v-model="mainTable.distribuForm.bankPhone" autocomplete="off" />
+              </el-form-item>
+            </el-col>
+          </el-row>
         </el-form>
 
         <div slot="footer" class="dialog-footer" style="text-align:center">
@@ -497,6 +518,11 @@ export default {
         appArray: [],
         distribuForm: {
           commercialNumber: localStorage.getItem('number'),
+          bankAccount: '',
+          bankName: '',
+          bankAddress: '',
+          bankPhone: '',
+          bankUserName: '',
           outId: '',
           operatorMoney: '',
           makerName: '',
@@ -593,6 +619,11 @@ export default {
       const {
         applicationName,
         applicationType,
+        bankAccount,
+        bankAddress,
+        bankName,
+        bankPhone,
+        bankUserName,
         callBackUrl,
         commercialNumber,
         operatorMoney,
@@ -603,8 +634,23 @@ export default {
         remark,
         time
       } = this.mainTable.distribuForm
-      const str = 'applicationName=' + applicationName + '&applicationType=' + applicationType + '&callBackUrl' + callBackUrl +
-        '&commercialNumber=' + commercialNumber + '&makerName=' + makerName + '&num=' + num + '&operatorMoney=' + (operatorMoney * 100) + '&outId=' + outId + '&payType=' + payType + '&remark=' + remark + '&time=' + time
+      const str =
+      'applicationName=' + applicationName +
+      '&applicationType=' + applicationType +
+      '&bankAccount' + bankAccount +
+      '&bankAddress' + bankAddress +
+      '&bankName' + bankName +
+      '&bankPhone' + bankPhone +
+      '&bankUserName' + bankUserName +
+      '&callBackUrl' + callBackUrl +
+      '&commercialNumber=' + commercialNumber +
+      '&makerName=' + makerName +
+      '&num=' + num +
+      '&operatorMoney=' + (operatorMoney * 100) +
+      '&outId=' + outId +
+      '&payType=' + payType +
+      '&remark=' + remark +
+      '&time=' + time
 
       this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
       distributeQR(this.mainTable.distribuForm).then(response => {
