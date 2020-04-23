@@ -6,7 +6,7 @@
           <el-input v-model="mainTable.filter.remark" placeholder="订单标识" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="$store.state.user.mode === 'admin'">
-          <el-input v-model="mainTable.filter.commercialNumber" placeholder="商户号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
+          <el-input v-model="mainTable.filter.commercialName" placeholder="商户名称" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="mainTable.filter.applicationType !== '3'">
           <el-input v-model="mainTable.filter.outId" placeholder="外部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
@@ -51,7 +51,7 @@
         >
           <el-table-column align="center" label="内部订单号" prop="orderId" />
           <el-table-column align="center" label="外部订单号" prop="outId" />
-          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="商户名称" prop="commercialName" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
               {{ scope.row.operatorMoney / 100 }}
@@ -150,7 +150,7 @@
         >
           <el-table-column align="center" label="内部订单号" prop="orderId" />
           <el-table-column align="center" label="外部订单号" prop="outId" />
-          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="商户名称" prop="commercialName" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
               {{ scope.row.operatorMoney / 100 }}
@@ -249,7 +249,7 @@
           highlight-current-row
         >
           <el-table-column align="center" label="内部订单号" prop="orderId" />
-          <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="商户名称" prop="commercialName" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
               {{ scope.row.operatorMoney / 100 }}
