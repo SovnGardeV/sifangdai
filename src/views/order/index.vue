@@ -3,13 +3,16 @@
     <el-card class="filter-container">
       <el-form :inline="true" style="text-align:right">
         <el-form-item v-if="mainTable.filter.applicationType !== '3'">
-          <el-input v-model="mainTable.filter.remark" placeholder="订单标识" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
+          <el-input v-model="mainTable.filter.remark" :placeholder="mainTable.filter.applicationType === '2' ? '收款人' : '打款人'" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="$store.state.user.mode === 'admin'">
-          <el-input v-model="mainTable.filter.commercialName" placeholder="商户名称" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
+          <el-input v-model="mainTable.filter.commercialNumber" placeholder="商户ID" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="mainTable.filter.applicationType !== '3'">
           <el-input v-model="mainTable.filter.outId" placeholder="外部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="mainTable.filter.bankPhone" placeholder="手机号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item>
           <el-input v-model="mainTable.filter.orderId" placeholder="内部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
@@ -28,6 +31,7 @@
           <el-button type="primary" size="mini" @click="mainTable.pager.index = 1;getMainTableData()">
             <i class="el-icon-search" />
           </el-button>
+          <el-button v-if="$store.state.user.mode === 'admin'" type="primary" size="mini" @click="showDialog">订单修改</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -35,10 +39,10 @@
     <el-tabs v-model="mainTable.filter.applicationType" type="border-card" @tab-click="handleTabClick">
       <el-tab-pane label="代收" name="1">
         <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
-          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代收付' : '手动挂单' }}</el-button>
+          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代收' : '手动挂单' }}</el-button>
         </el-col>
         <el-table
-          ref="mainTable"
+          ref="mainTable1"
           v-loading="mainTable.loading"
           class=""
           :data="mainTable.array"
@@ -49,12 +53,15 @@
           fit
           highlight-current-row
         >
+          <el-table-column type="selection" align="center" />
           <el-table-column align="center" label="内部订单号" prop="orderId" />
           <el-table-column align="center" label="外部订单号" prop="outId" />
-          <el-table-column align="center" label="商户名称" prop="commercialName" />
+          <el-table-column align="center" label="商户ID" prop="commercialNumber" />
+          <el-table-column align="center" label="APP名称" prop="appName" />
+          <el-table-column align="center" label="手机号" prop="bankPhone" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
-              {{ scope.row.operatorMoney / 100 }}
+              {{ (scope.row.operatorMoney||0) / 100 }}
             </template>
           </el-table-column>
           <!-- <el-table-column align="center" label="浮动金额">
@@ -64,7 +71,7 @@
           </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
-              {{ scope.row.deductedMoney / 100 }}
+              {{ (scope.row.deductedMoney||0) / 100 }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="订单状态">
@@ -77,8 +84,7 @@
               {{ map.backStatus[scope.row.backStatus] }}
             </template>
           </el-table-column>
-          <!-- <el-table-column align="center" label="打款人" prop="makerName" /> -->
-          <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="打款人" prop="remark" />
           <el-table-column align="center" label="服务费" prop="outRatio">
             <template slot-scope="scope">
               {{ (scope.row.outRatio || 0) / 100 }}
@@ -94,17 +100,17 @@
               {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <!-- <el-table-column align="center" label="操作人" prop="operatorName" /> -->
           <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
             </template>
           </el-table-column> -->
-          <el-table-column align="center" label="交易类型">
+          <!-- <el-table-column align="center" label="交易类型">
             <template slot-scope="scope">
               {{ map.applicationType[scope.row.applicationType] }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="支付方式">
             <template slot-scope="scope">
               {{ map.payType[scope.row.payType ] }}
@@ -119,7 +125,7 @@
             <template slot-scope="scope">
               <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" @click="confirmOrder(scope.row.orderId, 1)">确认</el-button>
               <el-button size="mini" plain type="primary" @click="showCheck(scope.row)">查看</el-button>
-              <el-button v-if="$store.state.user.mode === 'admin' && scope.row.applicationName" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
+              <el-button v-if="$store.state.user.mode === 'admin'" size="mini" type="primary" plain @click="callBackByHand(scope.row.orderId)">手动回调</el-button>
             </template>
           </el-table-column>
 
@@ -134,10 +140,10 @@
       </el-tab-pane>
       <el-tab-pane label="代付" name="2">
         <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
-          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代收付' : '手动挂单' }}</el-button>
+          <el-button size="mini" type="primary" @click="distributeQR">{{ $store.state.user.mode === 'admin' ? '发起代付' : '手动挂单' }}</el-button>
         </el-col>
         <el-table
-          ref="mainTable"
+          ref="mainTable2"
           v-loading="mainTable.loading"
           class=""
           :data="mainTable.array"
@@ -148,12 +154,15 @@
           fit
           highlight-current-row
         >
+          <el-table-column type="selection" align="center" />
           <el-table-column align="center" label="内部订单号" prop="orderId" />
           <el-table-column align="center" label="外部订单号" prop="outId" />
-          <el-table-column align="center" label="商户名称" prop="commercialName" />
+          <el-table-column align="center" label="商户ID" prop="commercialNumber" />
+          <el-table-column align="center" label="APP名称" prop="appName" />
+          <el-table-column align="center" label="手机号" prop="bankPhone" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
-              {{ scope.row.operatorMoney / 100 }}
+              {{ (scope.row.operatorMoney||0) / 100 }}
             </template>
           </el-table-column>
           <!-- <el-table-column align="center" label="浮动金额">
@@ -163,7 +172,7 @@
           </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
-              {{ scope.row.deductedMoney / 100 }}
+              {{ (scope.row.deductedMoney||0) / 100 }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="订单状态">
@@ -176,8 +185,7 @@
               {{ map.backStatus[scope.row.backStatus] }}
             </template>
           </el-table-column>
-          <!-- <el-table-column align="center" label="打款人" prop="makerName" /> -->
-          <el-table-column align="center" label="订单标识" prop="remark" />
+          <el-table-column align="center" label="收款人" prop="remark" />
           <el-table-column align="center" label="服务费" prop="outRatio">
             <template slot-scope="scope">
               {{ (scope.row.outRatio || 0) / 100 }}
@@ -193,17 +201,17 @@
               {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <!-- <el-table-column align="center" label="操作人" prop="operatorName" /> -->
           <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
             </template>
           </el-table-column> -->
-          <el-table-column align="center" label="交易类型">
+          <!-- <el-table-column align="center" label="交易类型">
             <template slot-scope="scope">
               {{ map.applicationType[scope.row.applicationType] }}
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column align="center" label="支付方式">
             <template slot-scope="scope">
               {{ map.payType[scope.row.payType ] }}
@@ -237,7 +245,7 @@
           <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
         </el-col> -->
         <el-table
-          ref="mainTable"
+          ref="mainTable3"
           v-loading="mainTable.loading"
           class=""
           :data="mainTable.array"
@@ -248,11 +256,14 @@
           fit
           highlight-current-row
         >
+          <el-table-column type="selection" align="center" />
           <el-table-column align="center" label="内部订单号" prop="orderId" />
-          <el-table-column align="center" label="商户名称" prop="commercialName" />
+          <el-table-column align="center" label="商户ID" prop="commercialNumber" />
+          <el-table-column align="center" label="APP名称" prop="appName" />
+          <el-table-column align="center" label="手机号" prop="bankPhone" />
           <el-table-column align="center" label="操作金额">
             <template slot-scope="scope">
-              {{ scope.row.operatorMoney / 100 }}
+              {{ (scope.row.operatorMoney||0) / 100 }}
             </template>
           </el-table-column>
           <!-- <el-table-column align="center" label="浮动金额">
@@ -262,7 +273,7 @@
           </el-table-column> -->
           <el-table-column align="center" label="代收/代付实际金额">
             <template slot-scope="scope">
-              {{ scope.row.deductedMoney / 100 }}
+              {{ (scope.row.deductedMoney||0) / 100 }}
             </template>
           </el-table-column>
           <el-table-column align="center" label="订单状态">
@@ -286,7 +297,7 @@
               {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作人" prop="operatorName" />
+          <!-- <el-table-column align="center" label="操作人" prop="operatorName" /> -->
           <!-- <el-table-column align="center" label="类型" prop="applicationName">
             <template slot-scope="scope">
               {{ scope.row.applicationName ? '应用操作' : '手动操作' }}
@@ -358,20 +369,43 @@
       </div>
     </el-dialog>
 
-    <el-dialog :width="(mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2) ? '750px' : '400px'" center title="发起代收付" :visible.sync="mainTable.dialogDistributeVisible">
+    <el-dialog width="400px" title="修改订单" :visible.sync="mainTable.dialogOrderVisible">
+      <el-form size="mini" label-width="100px">
+        <el-form-item label="回调状态">
+          <el-select v-model="mainTable.orderForm.backStatus">
+            <el-option v-for="(value, key) in map.backStatus" :key="key" :value="key" :label="value">
+              {{ value }}
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="订单状态">
+          <el-select v-model="mainTable.orderForm.orderStatus">
+            <el-option v-for="(value, key) in map.orderStatus" :key="key" :value="key" :label="value">
+              {{ value }}
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="回调地址">
+          <el-input v-model="mainTable.orderForm.callBackUrl" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="mainTable.orderForm.remark" type="textarea" :rows="2" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer" style="text-align:center">
+        <el-button size="mini" @click="mainTable.dialogOrderVisible = false">取 消</el-button>
+        <el-button size="mini" type="primary" @click="handleOrderSubmit">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog :width="(mainTable.distribuForm.payType === 2 && mainTable.filter.applicationType === '2') ? '750px' : '400px'" center :title="mainTable.filter.applicationType === '1' ? '发起代收' : '发起代付'" :visible.sync="mainTable.dialogDistributeVisible">
       <div v-if="!showCard.qrUrl">
         <el-form ref="distribuForm" :model="mainTable.distribuForm" :rules="mainTable.formRules" label-width="100px" size="small">
           <el-row :gutter="10">
-            <el-col :span="(mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2) ? 12 : 24">
+            <el-col :span="(mainTable.distribuForm.payType === 2 && mainTable.filter.applicationType === '2') ? 12 : 24">
               <el-form-item label="应用名称" prop="applicationName">
                 <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
                   <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appId" :label="item.appName">{{ item.appName }}</el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="应用类型" prop="applicationType">
-                <el-select v-model="mainTable.distribuForm.applicationType" style="width:100%">
-                  <el-option :value="1" label="代收">代收</el-option>
-                  <el-option :value="2" label="代付">代付</el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="外部订单号" prop="outId">
@@ -380,9 +414,6 @@
               <!-- <el-form-item label="打款人姓名" prop="makerName">
             <el-input v-model="mainTable.distribuForm.makerName" autocomplete="off" />
           </el-form-item> -->
-              <el-form-item label="数量" prop="num">
-                <el-input v-model="mainTable.distribuForm.num" min="0" type="number" autocomplete="off" />
-              </el-form-item>
               <el-form-item label="操作金额" prop="operatorMoney">
                 <el-input v-model="mainTable.distribuForm.operatorMoney" min="0" type="number" autocomplete="off" />
               </el-form-item>
@@ -396,11 +427,8 @@
               <el-form-item label="订单标识">
                 <el-input v-model="mainTable.distribuForm.remark" autocomplete="off" />
               </el-form-item>
-              <el-form-item label="回调地址" prop="callBackUrl">
-                <el-input v-model="mainTable.distribuForm.callBackUrl" autocomplete="off" />
-              </el-form-item>
             </el-col>
-            <el-col v-if="mainTable.distribuForm.payType === 2 && mainTable.distribuForm.applicationType === 2" :span="12">
+            <el-col v-if="mainTable.distribuForm.payType === 2 && mainTable.filter.applicationType === '2'" :span="12">
               <el-form-item label="用户名称">
                 <el-input v-model="mainTable.distribuForm.bankUserName" autocomplete="off" />
               </el-form-item>
@@ -422,7 +450,7 @@
 
         <div slot="footer" class="dialog-footer" style="text-align:center">
           <el-button size="mini" @click="mainTable.dialogDistributeVisible = false">取 消</el-button>
-          <el-button size="mini" type="primary" @click="handleDistributeQR">确 定</el-button>
+          <el-button size="mini" type="primary" @click="handleDistributeQR(mainTable.applicationType)">确 定</el-button>
         </div>
       </div>
 
@@ -450,7 +478,7 @@
 
 <script>
 import { bulidStr } from '@/utils/index'
-import { getOrderList, affirmOrder, callBackByHand } from '@/api/order'
+import { getOrderList, affirmOrder, callBackByHand, updateOrder } from '@/api/order'
 import { getCodeName } from '@/api/user'
 import { distributeQR, getQrById } from '@/api/qrCode'
 import Pagination from '@/components/Pagination'
@@ -506,6 +534,7 @@ export default {
         dialogDistributeVisible: false,
         dialogMethodVisible: false,
         dialogCheckVisible: false,
+        dialogOrderVisible: false,
         loading: false,
         reason: '',
         filter: {
@@ -513,7 +542,15 @@ export default {
           commercialIphone: '',
           commercialNumber: '',
           orderStatus: '',
+          backStatus: '',
+          bankPhone: '',
           applicationType: '1'
+        },
+        orderForm: {
+          backStatus: '',
+          orderStatus: '',
+          callBackUrl: '',
+          remark: ''
         },
         appArray: [],
         distribuForm: {
@@ -572,6 +609,30 @@ export default {
         this.mainTable.appArray = response.rows
       })
     },
+    showDialog() {
+      if (!this.$refs[`mainTable${this.mainTable.filter.applicationType}`].selection.length) {
+        this.$message.info('请选择要修改的订单')
+        return
+      }
+      this.initForm(this.mainTable.orderForm)
+      this.mainTable.dialogOrderVisible = true
+    },
+    handleOrderSubmit() {
+      let ids = []
+      this.$refs[`mainTable${this.mainTable.filter.applicationType}`].selection.forEach(item => {
+        ids.push(item.orderId)
+      })
+      ids = ids.join(',')
+      updateOrder({
+        ids,
+        filter: bulidStr(this.mainTable.orderForm)
+      }).then(response => {
+        if (response.errorCode !== '10000') return
+        this.getMainTableData()
+        this.mainTable.dialogOrderVisible = false
+        this.$message.success(response.mes)
+      })
+    },
     cashMethod(item) {
       this.mainTable.dialogMethodVisible = true
       this.cache = item || {}
@@ -611,24 +672,21 @@ export default {
       })
 
       this.$nextTick(_ => {
-        this.$refs[formName].clearValidate()
+        if (this.$refs[formName]) this.$refs[formName].clearValidate()
       })
     },
-    handleDistributeQR() {
+    handleDistributeQR(type) {
       this.mainTable.distribuForm.time = new Date().getTime()
       const {
         applicationName,
-        applicationType,
         bankAccount,
         bankAddress,
         bankName,
         bankPhone,
         bankUserName,
-        callBackUrl,
         commercialNumber,
         operatorMoney,
         makerName,
-        num,
         outId,
         payType,
         remark,
@@ -636,16 +694,13 @@ export default {
       } = this.mainTable.distribuForm
       const str =
       'applicationName=' + applicationName +
-      '&applicationType=' + applicationType +
       '&bankAccount' + bankAccount +
       '&bankAddress' + bankAddress +
       '&bankName' + bankName +
       '&bankPhone' + bankPhone +
       '&bankUserName' + bankUserName +
-      '&callBackUrl' + callBackUrl +
       '&commercialNumber=' + commercialNumber +
       '&makerName=' + makerName +
-      '&num=' + num +
       '&operatorMoney=' + (operatorMoney * 100) +
       '&outId=' + outId +
       '&payType=' + payType +
@@ -653,7 +708,7 @@ export default {
       '&time=' + time
 
       this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
-      distributeQR(this.mainTable.distribuForm).then(response => {
+      distributeQR(this.mainTable.distribuForm, type).then(response => {
         if (response.errorCode !== '10000') {
           return
         }
@@ -690,7 +745,7 @@ export default {
       this.getMainTableData()
     },
     confirmOrder(orderId, confirm) {
-      if (confirm === 3 && !this.mainTable.reason) {
+      if (confirm === 4 && !this.mainTable.reason) {
         this.$message.info('请填写驳回理由')
         return
       }
@@ -703,7 +758,7 @@ export default {
         const _form = {
           orderId,
           status: confirm,
-          reason: confirm === 3 ? this.mainTable.reason : undefined,
+          reason: confirm === 4 ? this.mainTable.reason : undefined,
           commercialNumber: localStorage.getItem('number')
         }
 

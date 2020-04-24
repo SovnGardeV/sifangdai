@@ -13,6 +13,34 @@
               </span>
             </div>
           </div>
+          <div style="padding: 0 20px">
+            <el-tabs type="border-card">
+              <el-tab-pane label="代收">
+                <div v-if="Object.keys(commMoneyInfo[1]).length" class="commMoney-info">
+                  <div v-for="(value, key) in commMoneyInfo[1]" v-show="infoMap[key]" :key="key" style="margin: 6px 0">
+                    <span>{{ infoMap[key] }}：{{ key === 'type' ? infoMap.type[value] : key === 'operMoney' ? (value/100) : value }}</span>
+                  </div>
+                </div>
+                <div v-else class="empty-data">暂无数据</div>
+              </el-tab-pane>
+              <el-tab-pane label="代付">
+                <div v-if="Object.keys(commMoneyInfo[2]).length" class="commMoney-info">
+                  <div v-for="(value, key) in commMoneyInfo[2]" v-show="infoMap[key]" :key="key" style="margin: 6px 0">
+                    <span>{{ infoMap[key] }}：{{ key === 'type' ? infoMap.type[value] : key === 'operMoney' ? (value/100) : value }}</span>
+                  </div>
+                </div>
+                <div v-else class="empty-data">暂无数据</div>
+              </el-tab-pane>
+              <el-tab-pane label="提现">
+                <div v-if="Object.keys(commMoneyInfo[3]).length" class="commMoney-info">
+                  <div v-for="(value, key) in commMoneyInfo[3]" v-show="infoMap[key]" :key="key" style="margin: 6px 0">
+                    <span>{{ infoMap[key] }}：{{ key === 'type' ? infoMap.type[value] : key === 'operMoney' ? (value/100) : value }}</span>
+                  </div>
+                </div>
+                <div v-else class="empty-data">暂无数据</div>
+              </el-tab-pane>
+            </el-tabs>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="17" style="height: 100%;" class="dashboard-data">
@@ -34,6 +62,11 @@
                 <el-table-column align="center" label="APP名称" prop="appName" />
                 <el-table-column align="center" label="白名单" prop="appWhiteList" />
                 <el-table-column align="center" label="回调地址" prop="appBackUrl" />
+                <el-table-column align="center" label="是否上架">
+                  <template slot-scope="scope">
+                    {{ scope.row.appIsPut ? '下架':'上架' }}
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" label="APPkey">
                   <template slot-scope="scope">
                     {{ scope.row.appKey }}
@@ -51,7 +84,53 @@
                     {{ new Date(scope.row.operatorTime).toLocaleString() }}
                   </template>
                 </el-table-column>
+                <el-table-column align="center" label="操作" width="160">
+                  <template slot-scope="scope">
+                    <el-button size="mini" type="primary" @click="edit(scope.row)">修改</el-button>
+                    <el-button size="mini" type="danger" @click="deleteApp(scope.row.appId)">删除</el-button>
+                  </template>
+                </el-table-column>
               </el-table>
+              <el-dialog :title="'修改APP'" width="400px" center :visible.sync="dialogEditVisible">
+                <el-form ref="editForm" :model="editForm">
+                  <el-form-item label="应用LOGO" label-width="100px" prop="appImg">
+                    <el-upload
+                      class="avatar-uploader"
+                      action=""
+                      :show-file-list="false"
+                      :before-upload="handleUploadPicture"
+                    >
+                      <img v-if="editForm.appImg" :src="editForm.appImg" class="avatar">
+                      <i v-else class="el-icon-plus avatar-uploader-icon" />
+                    </el-upload>
+                  </el-form-item>
+                  <!-- <el-form-item label="APPID" label-width="100px" prop="appId">
+          <el-input v-model="addForm.appId" autocomplete="off" />
+        </el-form-item> -->
+                  <el-form-item label="APP名称" label-width="100px" prop="appName">
+                    <el-input v-model="editForm.appName" autocomplete="off" />
+                  </el-form-item>
+                  <el-form-item label="APPkey" label-width="100px" prop="appKey">
+                    <el-input v-model="editForm.appKey" autocomplete="off" />
+                  </el-form-item>
+                  <el-form-item label="是否上架" label-width="100px">
+                    <el-select v-model="editForm.appIsPut">
+                      <el-option value="0" label="上架">上架</el-option>
+                      <el-option value="1" label="下架">下架</el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="回调地址" label-width="100px" prop="appBackUrl">
+                    <el-input v-model="editForm.appBackUrl" autocomplete="off" />
+                  </el-form-item>
+                  <el-form-item label="白名单" label-width="100px" prop="appWhiteList">
+                    <el-input v-model="editForm.appWhiteList" type="textarea" autocomplete="off" />
+                  </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                  <el-button size="mini" @click="dialogEditVisible = false">取 消</el-button>
+                  <el-button size="mini" type="primary" @click="handleAPP">确 定</el-button>
+                </div>
+              </el-dialog>
             </el-tab-pane>
             <el-tab-pane label="新增APP" name="second">
               <el-form ref="addForm" :model="addForm" label-width="100px">
@@ -132,6 +211,9 @@
                 <el-form-item label="银行绑定手机号">
                   <el-input v-model="witForm.bankPhone" style="width:unset;" autocomplete="off" />
                 </el-form-item>
+                <el-form-item label="支付密码">
+                  <el-input v-model="witForm.safetyPwd" type="password" style="width:unset;" autocomplete="off" />
+                </el-form-item>
 
                 <el-form-item label="提现金额">
                   <el-input v-model="witForm.operatorMoney" style="width:unset;" autocomplete="off">
@@ -195,7 +277,7 @@
       </el-col>
     </el-row>
 
-    <el-row v-else :gutter="10" style="height: 100%;">
+    <!-- <el-row v-else :gutter="10">
       <el-col :span="6">
         <el-card>
           <div class="admin-title">今日代收金额</div>
@@ -220,13 +302,63 @@
           <div id="cancelCount" class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
         </el-card>
       </el-col>
-    </el-row>
+    </el-row> -->
+    <div v-else>
+      <el-row :gutter="10" style="margin-top:10px">
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">入金总单数</div>
+            <div id="allInNum" class="admin-number">{{ homeInfo.allInNum || 0 }}</div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">今日入金单数</div>
+            <div id="dayInCount" class="admin-number">{{ homeInfo.dayInCount || 0 }}</div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">今日入今金额</div>
+            <div id="dayInMoney" class="admin-number">{{ homeInfo.dayInMoney / 100 || 0 }}</div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row :gutter="10" style="margin-top:10px">
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">出金总单数</div>
+            <div id="allOutNum" class="admin-number">{{ homeInfo.allOutNum || 0 }}</div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">今日出金单数</div>
+            <div id="dayOutCount" class="admin-number">{{ homeInfo.dayOutCount || 0 }}</div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card>
+            <div class="admin-title">今日出金金额</div>
+            <div id="dayOutMoney" class="admin-number">{{ homeInfo.dayOutMoney / 100 || 0 }}</div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+    <!-- <el-row style="margin-top:10px">
+      <el-col :span="12" :offset="6">
+        <el-card>
+          <div class="admin-title">商户总余额</div>
+          <div id="cancelCount" class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
+        </el-card>
+      </el-col>
+    </el-row> -->
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo, getCashWit } from '@/api/user'
+import { getUserInfo, getAPP, addAPP, modifyPassword, insertIp, applyWit, setAPPKey, getHomeInfo, getCashWit, deleteApp, updAppInfo, getCommMoneyInfo } from '@/api/user'
 import { uploadPicture, queryQrAll } from '@/api/qrCode'
 import { JSEncrypt } from 'jsencrypt'
 import { bulidStr, numRunFun } from '@/utils/index'
@@ -235,6 +367,11 @@ export default {
   name: 'Dashboard',
   data() {
     return {
+      commMoneyInfo: {
+        1: {},
+        2: {},
+        3: {}
+      },
       name: localStorage.getItem('name'),
       homeInfo: {
         allMoney: 0,
@@ -250,6 +387,20 @@ export default {
       activeName: 'first',
       addForm: {
         appWhiteList: '',
+        appBackUrl: '',
+        appKey: '',
+        appImg: '',
+        appId: '',
+        appName: '',
+        commercialNumber: (_ => {
+          return localStorage.getItem('number')
+        })()
+      },
+      dialogEditVisible: false,
+      row: {},
+      editForm: {
+        appWhiteList: '',
+        appIsPut: '',
         appBackUrl: '',
         appKey: '',
         appImg: '',
@@ -285,6 +436,7 @@ export default {
         bankName: '',
         bankAddress: '',
         bankPhone: '',
+        safetyPwd: '',
         operatorMoney: '',
         payType: 2
       },
@@ -304,12 +456,22 @@ export default {
         createTime: '创建时间',
         appKey: 'appKey'
       },
+      infoMap: {
+        allMoney: '总金额',
+        allWitMoney: '总提现金额',
+        balance: '余额',
+        freezeMoney: '冻结金额',
+        type: '',
+        num: '今日订单数',
+        operMoney: '今日提现总金额'
+      },
       cashWit: 0
     }
   },
   created() {
     if (this.$store.state.user.mode === 'operator') {
       this.getCommercialInfo()
+      this.getCommMoneyInfo()
       this.getAPPListInfo()
       this.getQRList()
     } else {
@@ -317,6 +479,61 @@ export default {
     }
   },
   methods: {
+    getCommMoneyInfo() {
+      getCommMoneyInfo({
+        commercialId: localStorage.getItem('number')
+      }).then(response => {
+        if (response.errorCode !== '10000') return
+        if (Array.isArray(response.rows) && response.rows.length) {
+          response.rows.forEach(item => {
+            this.commMoneyInfo[item.type] = item || {}
+          })
+        }
+      })
+    },
+    edit(item) {
+      this.row = item
+      this.editForm.appBackUrl = item.appBackUrl
+      this.editForm.appKey = item.appKey
+      this.editForm.appIsPut = item.appIsPut.toString()
+      this.editForm.appImg = item.appImg
+      this.editForm.appName = item.appName
+      this.editForm.appWhiteList = item.appWhiteList
+      this.dialogEditVisible = true
+    },
+    deleteApp(appId) {
+      this.$confirm('确定要删除该APP吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteApp({ appId }).then(response => {
+          if (response.errorCode !== '10000') return
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.getMainTableData()
+          this.dialogEditVisible = false
+        }).catch(err => {
+          this.$message.error(err)
+        })
+      })
+    },
+    handleAPP() {
+      const _form = Object.assign({}, this.editForm)
+      _form.appId = this.row.appId
+      updAppInfo(_form).then(response => {
+        if (response.errorCode !== '10000') return
+
+        this.$message({
+          type: 'success',
+          message: response.mes
+        })
+        this.dialogEditVisible = false
+        this.getAPPListInfo()
+      })
+    },
     getCashWit() {
       getCashWit({
         commercialNumber: localStorage.getItem('number')
@@ -328,10 +545,12 @@ export default {
     getHomeInfo() {
       getHomeInfo().then(response => {
         if (response.errorCode !== '10000') return
-        numRunFun(0, response.data.allMoney / 100, document.querySelector('#allMoney'))
-        numRunFun(0, response.data.count, document.querySelector('#count'))
-        numRunFun(0, response.data.passCount, document.querySelector('#passCount'))
-        numRunFun(0, response.data.cancelCount, document.querySelector('#cancelCount'))
+        numRunFun(0, response.data.dayInMoney / 100, document.querySelector('#dayInMoney'))
+        numRunFun(0, response.data.dayOutMoney / 100, document.querySelector('#dayOutMoney'))
+        numRunFun(0, response.data.allInNum, document.querySelector('#allInNum'))
+        numRunFun(0, response.data.allOutNum, document.querySelector('#allOutNum'))
+        numRunFun(0, response.data.dayInCount, document.querySelector('#dayInCount'))
+        numRunFun(0, response.data.dayOutCount, document.querySelector('#dayOutCount'))
         // this.homeInfo = response.data || {}
       })
     },
@@ -360,7 +579,7 @@ export default {
             type: 'success',
             message: '修改成功!'
           })
-          this.getCommercialInfo()
+          this.getAPPListInfo()
         }).catch(err => {
           this.$message.error(err)
         })
@@ -443,17 +662,22 @@ export default {
       })
     },
     handleWitForm() {
-      const _form = Object.assign({}, this.witForm)
-      _form.operatorMoney = _form.operatorMoney * 100
-      applyWit(_form).then(response => {
-        if (response.errorCode !== '10000') {
-          return
-        }
+      this.$store.dispatch('user/getPublicKey').then(response => {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.witForm)
+        _form.operatorMoney = _form.operatorMoney * 100
+        _form.safetyPwd = encrypt.encrypt(_form.safetyPwd)
+        applyWit(_form).then(response => {
+          if (response.errorCode !== '10000') {
+            return
+          }
 
-        this.$message.success(response.mes)
-        this.initForm(this.witForm)
-      }).catch(err => {
-        this.$message.error(err)
+          this.$message.success(response.mes)
+          this.initForm(this.witForm)
+        }).catch(err => {
+          this.$message.error(err)
+        })
       })
     },
     initForm(form) {

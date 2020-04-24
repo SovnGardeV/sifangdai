@@ -26,3 +26,12 @@ export function callBackByHand(data) {
     data
   })
 }
+
+export function updateOrder(data) {
+  return request({
+    url: '/instead-pay-web/orderInfo/updateOrder',
+    method: 'post',
+    'Content-Type': 'multipart/form-data',
+    data
+  })
+}

@@ -12,13 +12,47 @@
                 <div class="info-tip">
                   {{ map[key] }}
                 </div>
-                {{ key === 'commercialBalance' ? (value / 100) : value }}
+                {{ belongNumber.indexOf(key) > -1 ? (value / 100) : value }}
               </span>
             </div>
           </div>
         </el-card>
       </el-col>
       <el-col :span="18">
+        <el-card style="margin-bottom:10px">
+          <div class="app-list-title">金额详情</div>
+          <el-row style="padding: 10px 0" :gutter="10">
+            <el-col :span="6">
+              <div class="commMoney-info-front">
+                总金额:{{ (frontInfo.allMoney/100) || 0 }}
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="commMoney-info-front">
+                总提现金额:{{ (frontInfo.allWitMoney/100) || 0 }}
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="commMoney-info-front">
+                余额:{{ (frontInfo.balance/100) || 0 }}
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="commMoney-info-front">
+                冻结金额:{{ (frontInfo.freezeMoney/100) || 0 }}
+              </div>
+            </el-col>
+          </el-row>
+          <el-row :gutter="8">
+            <el-col v-for="(item,index) in commMoneyInfo" :key="index" :span="8">
+              <div class="commMoney-info">
+                <div v-for="(value, key) in item" v-show="infoMap.keyValue[key]" :key="key">
+                  <span>{{ infoMap.keyValue[key] }}：{{ key === 'type' ? infoMap.type[value] : key === 'operMoney' ? (value/100) : value }}</span>
+                </div>
+              </div>
+            </el-col>
+          </el-row>
+        </el-card>
         <el-card>
           <div style="margin-bottom:20px">
             <div class="app-list-title">APP列表</div>
@@ -26,33 +60,34 @@
               <el-input v-model="mainTable.filter.name" size="mini" style="width:unset" placeholder="请输入APP名称" @keyup.enter.native="filterList()">
                 <el-button slot="append" icon="el-icon-search" @click="filterList()" />
               </el-input>
-              <el-button size="mini" type="primary" @click="add()">新增</el-button>
+              <el-button size="mini" type="primary" @click="showDialog('add')">新增</el-button>
             </div>
           </div>
           <el-row :gutter="10">
-            <el-col v-for="item in mainTable.array" :key="item.appId" :xs="12" :sm="8" :xl="4" :lg="6">
+            <el-col v-for="item in mainTable.array" :key="item.appId" :xs="24" :sm="24" :xl="8" :lg="12">
               <div class="app-info">
-                <div class="app-info-detail">
-                  <el-scrollbar>
-                    <div v-for="(value, key) in item" :key="key">
-                      <div v-if="map[key]" style="margin-bottom: 15px">
-                        <div class="before-line">{{ map[key] }}</div>
-                        <div v-if="key !== 'appKey'">{{ value }}</div>
-                        <div v-else>
-                          <span>
-                            {{ value }}
-                            <i class="el-icon-edit" style="cursor: pointer;" @click="editAPPKey(item)" />
-                          </span>
-                        </div>
-                      </div>
+                <el-row>
+                  <el-col :span="12" style="padding:5px">
+                    <i class="el-icon-edit-outline" style="color:#4E5BF2;cursor:pointer" @click="showDialog('edit', item)" />
+                  </el-col>
+                  <el-col style="text-align:right;padding:5px" :span="12">
+                    <i class="el-icon-close" style="color:red;cursor:pointer" @click="deleteApp(item.appId)" />
+                  </el-col>
+                </el-row>
+                <el-row style="padding: 5px" :gutter="10">
+                  <el-col :span="8">
+                    <div class="image-header">
+                      <el-image :src="item.appImg" />
                     </div>
-                  </el-scrollbar>
-                </div>
-                <div class="shadow" />
-                <div class="image-header">
-                  <img :src="item.appImg">
-                </div>
-                <div class="app-info-name">{{ item.appName }}</div>
+                  </el-col>
+                  <el-col :span="16">
+                    <div v-for="(value,key) in item" :key="key" style="font-size:14px;margin:4px">
+                      <span v-if="appMap[key]">{{ appMap[key] }}：{{ value }}
+                        <i v-if="key==='appKey'" style="cursor:pointer" class="el-icon-edit" @click="editAPPKey(item)" />
+                      </span>
+                    </div>
+                  </el-col>
+                </el-row>
               </div>
             </el-col>
           </el-row>
@@ -63,7 +98,7 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="新增APP" width="400px" center :visible.sync="mainTable.dialogAddVisible">
+    <el-dialog :title="mode === 'add' ? '新增APP' : '修改APP'" width="400px" center :visible.sync="mainTable.dialogAddVisible">
       <el-form ref="addForm" :model="mainTable.addForm" :rules="mainTable.formRules">
         <el-form-item label="应用LOGO" label-width="100px" prop="appImg">
           <el-upload
@@ -82,12 +117,18 @@
         <el-form-item label="APP名称" label-width="100px" prop="appName">
           <el-input v-model="mainTable.addForm.appName" autocomplete="off" />
         </el-form-item>
-        <!-- <el-form-item label="APPkey" label-width="100px" prop="appKey">
+        <el-form-item v-if="mode === 'edit'" label="APPkey" label-width="100px" prop="appKey">
           <el-input v-model="mainTable.addForm.appKey" autocomplete="off" />
-        </el-form-item> -->
-        <!-- <el-form-item label="回调地址" label-width="100px" prop="appBackUrl">
+        </el-form-item>
+        <el-form-item v-if="mode === 'edit'" label="是否上架" label-width="100px">
+          <el-select v-model="mainTable.addForm.appIsPut">
+            <el-option value="0" label="上架">上架</el-option>
+            <el-option value="1" label="下架">下架</el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="mode === 'edit'" label="回调地址" label-width="100px" prop="appBackUrl">
           <el-input v-model="mainTable.addForm.appBackUrl" autocomplete="off" />
-        </el-form-item> -->
+        </el-form-item>
         <el-form-item label="白名单" label-width="100px" prop="appWhiteList">
           <el-input v-model="mainTable.addForm.appWhiteList" type="textarea" autocomplete="off" />
         </el-form-item>
@@ -102,20 +143,24 @@
 
 <script>
 import { uploadPicture } from '@/api/qrCode'
-import { getUserInfo, addAPP, setAPPKey } from '@/api/user'
+import { getUserInfo, addAPP, setAPPKey, deleteApp, updAppInfo, getCommMoneyInfo } from '@/api/user'
 
 export default {
   data() {
     return {
+      mode: 'add',
+      commMoneyInfo: [],
       mainTable: {
         dialogAddVisible: false,
         filter: {
           name: ''
         },
         loading: false,
+        row: {},
         array: [],
         addForm: {
           appWhiteList: '',
+          appIsPut: '',
           appBackUrl: '',
           appKey: '',
           appImg: '',
@@ -140,6 +185,9 @@ export default {
         commercialIphone: '商户手机号',
         commercialNumber: '商户号',
         commercialBalance: '商户余额',
+        freezeMoney: '冻结金额',
+        allMoney: '总金额',
+        allWitMoney: '总提现金额',
         commercialRatio: '服务费收取比例',
         creationTime: '创建时间',
         updateTime: '	修改时间',
@@ -150,16 +198,93 @@ export default {
         createTime: '创建时间',
         appKey: 'appKey'
       },
+      appMap: {
+        appName: 'App名称',
+        appWhiteList: '白名单',
+        appBackUrl: '回调地址',
+        appKey: 'appKey',
+        appIsPut: '是否上架',
+        createTime: '创建时间',
+        operatorTime: '操作时间',
+        operatorName: '操作人'
+      },
+      frontInfo: {
+        allMoney: '',
+        allWitMoney: '',
+        balance: '',
+        freezeMoney: ''
+      },
+      infoMap: {
+        type: {
+          1: '代收',
+          2: '代付',
+          3: '提现'
+        },
+        keyValue: {
+          // allMoney: '总金额',
+          // allWitMoney: '总提现金额',
+          // balance: '余额',
+          // freezeMoney: '冻结金额',
+          type: '类型',
+          num: '今日订单数',
+          operMoney: '今日提现总金额'
+        }
+      },
+      belongNumber: ['freezeMoney', 'commercialBalance', 'allMoney', 'allWitMoney'],
       commercialInfo: {}
     }
   },
   created() {
+    this.getCommMoneyInfo()
     this.getMainTableData()
   },
   methods: {
-    add() {
+    getCommMoneyInfo() {
+      const { commercialId } = this.$route.query
+      getCommMoneyInfo({
+        commercialId
+      }).then(response => {
+        if (response.errorCode !== '10000') return
+        this.commMoneyInfo = response.rows
+        if (Array.isArray(response.rows) && response.rows.length) {
+          this.frontInfo.allMoney = response.rows[0].allMoney
+          this.frontInfo.allWitMoney = response.rows[0].allWitMoney
+          this.frontInfo.balance = response.rows[0].balance
+          this.frontInfo.freezeMoney = response.rows[0].freezeMoney
+        }
+      })
+    },
+    showDialog(type, item) {
+      this.mode = type
       this.mainTable.dialogAddVisible = true
       this.initForm()
+      if (type === 'edit') {
+        this.mainTable.row = item
+        this.mainTable.addForm.appBackUrl = item.appBackUrl
+        this.mainTable.addForm.appKey = item.appKey
+        this.mainTable.addForm.appIsPut = item.appIsPut
+        this.mainTable.addForm.appImg = item.appImg
+        this.mainTable.addForm.appName = item.appName
+        this.mainTable.addForm.appWhiteList = item.appWhiteList
+      }
+    },
+    deleteApp(appId) {
+      this.$confirm('确定要删除该APP吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteApp({ appId }).then(response => {
+          if (response.errorCode !== '10000') return
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.getMainTableData()
+        }).catch(err => {
+          this.$message.error(err)
+        })
+      })
     },
     initForm() {
       const keyNameArr = Object.keys(this.mainTable.addForm)
@@ -183,6 +308,7 @@ export default {
             type: 'success',
             message: '修改成功!'
           })
+          this.getMainTableData()
         }).catch(err => {
           this.$message.error(err)
         })
@@ -204,7 +330,15 @@ export default {
       })
     },
     handleAddAPP() {
-      addAPP(this.mainTable.addForm).then(response => {
+      const _form = Object.assign({}, this.mainTable.addForm)
+      if (this.mode === 'edit') {
+        _form.appId = this.mainTable.row.appId
+      }
+      const _api = {
+        add: addAPP,
+        edit: updAppInfo
+      }
+      _api[this.mode](_form).then(response => {
         if (response.errorCode !== '10000') return
 
         this.$message({
@@ -230,6 +364,7 @@ export default {
       getUserInfo(_form).then(response => {
         response.appInfo.forEach(item => {
           item.createTime = new Date(item.createTime).toLocaleString()
+          item.operatorTime = new Date(item.operatorTime).toLocaleString()
           item.appIsPut = item.appIsPut.toString() === '0' ? '上架' : '下架'
         })
         this.mainTable.array = this.mainTable.originArray = response.appInfo || []
@@ -315,20 +450,6 @@ export default {
   position: relative;
   overflow: hidden;
 
-  &:hover{
-    .shadow{
-      opacity: 1;
-    }
-    .app-info-name{
-      color: #fff;
-      transform: translateY(-2em);
-      // font-size: 20px;
-    }
-    .app-info-detail{
-      top: 0;
-    }
-  }
-
   .app-info-detail{
     position: absolute;
     z-index: 4;
@@ -362,13 +483,8 @@ export default {
   .image-header{
     position:relative;
     width:100%;
-    height:0;
-    padding-top:100%;
-    img{
-
-      position:absolute;
-      top:0;
-      left:0;
+    height:160px;
+    .el-image{
       width:100%;
       height:100%;
 
@@ -423,5 +539,26 @@ export default {
   height: 178px;
   line-height: 178px;
   text-align: center;
+}
+
+.commMoney-info-front{
+  background: #4E5BF2;
+  width: 100%;
+  height: 50px;
+  border-radius: 4px;
+  font-size: 20px;
+  line-height: 50px;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+}
+.commMoney-info{
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  div{
+    margin: 6px 0;
+  }
 }
 </style>

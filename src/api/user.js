@@ -173,3 +173,48 @@ export function getHomeInfo() {
   })
 }
 
+export function delCommercia(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/deleteCommercial',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+
+export function recharge(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/recharge',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteApp(data) {
+  return request({
+    url: '/instead-pay-web/app/delete',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+
+export function updAppInfo(data) {
+  return request({
+    url: '/instead-pay-web/app/updAppInfo',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+
+export function getCommMoneyInfo(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/getCommMoneyInfo',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+

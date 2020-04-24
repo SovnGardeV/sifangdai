@@ -17,9 +17,13 @@ export function addQR(data) {
   })
 }
 
-export function distributeQR(data) {
+export function distributeQR(data, type) {
+  const _api = {
+    1: 'distributionQrCodeByHand',
+    2: 'replaceByHand'
+  }
   return request({
-    url: '/instead-pay-web/qr/distributionQrCodeByHand',
+    url: `/instead-pay-web/qr/${_api[type]}`,
     method: 'post',
     'Content-Type': 'multipart/form-data',
     data

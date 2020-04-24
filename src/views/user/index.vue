@@ -17,13 +17,14 @@
               <i class="el-icon-search" />
             </el-button>
             <el-button type="primary" size="mini" @click="showAddForm">新增</el-button>
+            <el-button type="danger" size="mini" @click="deleteItem">删除</el-button>
           </el-form-item>
         </el-form>
       </el-card>
       <el-card>
         <el-table
+          ref="mainTable"
           v-loading="mainTable.loading"
-          class=""
           :data="mainTable.array"
           element-loading-text="加载中，请稍候"
           element-loading-spinner="el-icon-loading"
@@ -32,9 +33,15 @@
           fit
           highlight-current-row
         >
+          <el-table-column type="selection" align="center" />
           <el-table-column align="center" label="姓名" prop="commercialName" />
           <el-table-column align="center" label="手机号" prop="commercialIphone" />
           <el-table-column align="center" label="商户号" prop="commercialNumber" />
+          <el-table-column align="center" label="商户余额" prop="commercialBalance">
+            <template slot-scope="scope">
+              {{ scope.row.commercialBalance / 100 }}
+            </template>
+          </el-table-column>
           <el-table-column align="center" label="服务费比例" prop="commercialRatio">
             <template slot-scope="scope">
               <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
@@ -63,11 +70,24 @@
               {{ new Date(scope.row.creationTime).toLocaleString() }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作" width="260px">
+          <el-table-column align="center" label="操作" width="180px">
             <template slot-scope="scope">
-              <el-button type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
-              <el-button plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
-              <el-button plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
+              <el-row :gutter="4" style="margin-bottom: 4px">
+                <el-col :span="14">
+                  <el-button style="width:100%" type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
+                </el-col>
+                <el-col :span="10">
+                  <el-button style="width:100%" size="mini" type="primary" plain @click="recharge(scope.row)">充值</el-button>
+                </el-col>
+              </el-row>
+              <el-row :gutter="4">
+                <el-col :span="12">
+                  <el-button style="width:100%" plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
+                </el-col>
+                <el-col :span="12">
+                  <el-button style="width:100%" plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
+                </el-col>
+              </el-row>
 
             </template>
           </el-table-column>
@@ -91,6 +111,18 @@
         <div slot="footer" class="dialog-footer">
           <el-button size="mini" @click="mainTable.dialogFormVisible = false">取 消</el-button>
           <el-button size="mini" type="primary" @click="handleSubmitForm">确 定</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog width="400px" center title="充值" :visible.sync="mainTable.dialogCashVisible">
+        <el-form ref="form" :model="mainTable.cashForm" label-width="80px" size="mini">
+          <el-form-item label="充值金额">
+            <el-input v-model="mainTable.cashForm.money" autocomplete="off" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button size="mini" @click="mainTable.dialogCashVisible = false">取 消</el-button>
+          <el-button size="mini" type="primary" @click="handleSubmitCash">确 定</el-button>
         </div>
       </el-dialog>
 
@@ -149,7 +181,7 @@
 <script>
 import { getMenu, addRoleMenu } from '@/api/menu'
 import { bulidStr, handleIntoChildren } from '@/utils/index'
-import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser, getWhiteIp } from '@/api/user'
+import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser, getWhiteIp, delCommercia, recharge } from '@/api/user'
 import Pagination from '@/components/Pagination'
 import { JSEncrypt } from 'jsencrypt'
 
@@ -166,6 +198,7 @@ export default {
         dialogFormVisible: false,
         dialogAddVisible: false,
         dialogPermissionVisible: false,
+        dialogCashVisible: false,
         commercialRatio: 0,
         commercialWithRatio: 0,
         row: {},
@@ -173,6 +206,9 @@ export default {
           commercialName: '',
           commercialIphone: '',
           commercialNumber: ''
+        },
+        cashForm: {
+          money: ''
         },
         form: {
           commercialNumber: '',
@@ -334,6 +370,26 @@ export default {
         this.$refs['editWitRadio'].focus()
       })
     },
+    recharge(item) {
+      const keyNameArr = Object.keys(this.mainTable.cashForm)
+      keyNameArr.forEach(item => {
+        this.mainTable.cashForm[item] = ''
+      })
+      this.mainTable.row = item || {}
+      this.mainTable.dialogCashVisible = true
+    },
+    handleSubmitCash() {
+      const _form = {
+        commercialId: this.mainTable.row.commercialId,
+        money: this.mainTable.cashForm.money * 100
+      }
+      recharge(_form).then(response => {
+        if (response.errorCode !== '10000') return
+        this.$message.success(response.mes)
+        this.getMainTableData()
+        this.mainTable.dialogCashVisible = false
+      })
+    },
     handleEditRadio(item) {
       if (this.mainTable.commercialRatio === 0) {
         item.isEdit = false
@@ -374,6 +430,33 @@ export default {
         this.$message.error(err)
       }).finally(_ => {
         item.isWitEdit = false
+      })
+    },
+    deleteItem() {
+      if (!this.$refs['mainTable'].selection.length) {
+        this.$message.info('请选择要删除的商户')
+        return
+      }
+      this.$confirm('确定要删除吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        let ids = []
+        this.$refs['mainTable'].selection.forEach(item => {
+          ids.push(item.commercialId)
+        })
+        ids = ids.join(',')
+        delCommercia({ ids }).then(response => {
+          if (response.errorCode !== '10000') return
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.getMainTableData()
+        }).catch(err => {
+          this.$message.error(err)
+        })
       })
     },
     handleSubmitForm() {
