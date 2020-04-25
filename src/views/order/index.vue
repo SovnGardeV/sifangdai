@@ -697,6 +697,7 @@ export default {
       const _arr = this.mainTable.distribuForm.applicationName.split(',')
       this.mainTable.distribuForm.applicationName = _arr[0]
       this.mainTable.distribuForm.appKey = _arr[1]
+      this.mainTable.distribuForm.operatorMoney = this.mainTable.distribuForm.operatorMoney * 100
       this.mainTable.distribuForm.time = new Date().getTime()
       const {
         applicationName,
@@ -723,7 +724,7 @@ export default {
       '&bankUserName=' + bankUserName +
       '&commercialNumber=' + commercialNumber +
       '&makerName=' + makerName +
-      '&operatorMoney=' + (operatorMoney * 100) +
+      '&operatorMoney=' + operatorMoney +
       '&outId=' + outId +
       '&payType=' + payType +
       '&remark=' + remark +
