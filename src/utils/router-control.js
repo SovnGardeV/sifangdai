@@ -3,7 +3,7 @@ import router from '@/router'
 // import store from '@/store'
 
 const pathArray = []
-const adminUserArray = ['User', 'Config', 'Nested']
+const adminUserArray = ['User', 'Config', 'Nested', 'Static']
 
 addRoutePath(pathArray, asynRouter)
 

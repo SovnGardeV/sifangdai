@@ -146,6 +146,20 @@ export const asynRouter = [
     ]
   },
   {
+    path: '/static',
+    component: Layout,
+    redirect: '/static/index',
+    name: 'Static',
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/statistics/index'), // Parent router-view
+        name: 'Statistics',
+        meta: { title: '统计管理', icon: 'Statics' }
+      }
+    ]
+  },
+  {
     path: '/userlist',
     component: Layout,
     redirect: '/userlist/index',

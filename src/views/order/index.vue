@@ -419,8 +419,11 @@
           <el-row :gutter="10">
             <el-col :span="(mainTable.distribuForm.payType === 2 && mainTable.filter.applicationType === '2') ? 12 : 24">
               <el-form-item label="应用名称" prop="applicationName">
-                <el-select v-model="mainTable.distribuForm.applicationName" style="width:100%">
-                  <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="item.appId" :label="item.appName">{{ item.appName }}</el-option>
+                <el-select
+                  v-model="mainTable.distribuForm.applicationName"
+                  style="width:100%"
+                >
+                  <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="`${item.appId},${item.appKey}`" :label="item.appName">{{ item.appName }}</el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="外部订单号" prop="outId">
@@ -621,7 +624,7 @@ export default {
         if (response.errorCode !== '10000') return
 
         this.mainTable.appArray = response.rows
-        this.mainTable.distribuForm.appKey = response.appKey
+        // this.mainTable.distribuForm.appKey = response.appKey
       })
     },
     showDialog() {
@@ -691,6 +694,9 @@ export default {
       })
     },
     handleDistributeQR(type) {
+      const _arr = this.mainTable.distribuForm.applicationName.split(',')
+      this.mainTable.distribuForm.applicationName = _arr[0]
+      this.mainTable.distribuForm.appKey = _arr[1]
       this.mainTable.distribuForm.time = new Date().getTime()
       const {
         applicationName,
@@ -705,6 +711,7 @@ export default {
         outId,
         payType,
         remark,
+        appKey,
         time
       } = this.mainTable.distribuForm
       const str =
@@ -720,9 +727,11 @@ export default {
       '&outId=' + outId +
       '&payType=' + payType +
       '&remark=' + remark +
-      '&time=' + time
+      '&time=' + time +
+      '&appKey=' + appKey
 
       this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
+      debugger
       distributeQR(this.mainTable.distribuForm, type).then(response => {
         if (response.errorCode !== '10000') {
           return
