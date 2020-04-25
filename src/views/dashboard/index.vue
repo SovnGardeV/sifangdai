@@ -2,7 +2,7 @@
   <div class="dashboard-container">
     <el-row v-if="$store.state.user.mode === 'operator'" style="height: 100%;" :gutter="10">
       <el-col :span="7" style="height: 100%;">
-        <el-card style="height: 100%;" class="no-padding">
+        <el-card style="height: 100%;overflow:auto" class="no-padding">
           <div class="dashboard-title">商户信息</div>
           <div style="padding: 10px 30px;">
             <div v-for="(value,key) in commercialInfo" :key="key" class="detail-info">
@@ -13,8 +13,10 @@
               </span>
             </div>
           </div>
-          <div style="padding: 0 20px">
-            <el-tabs type="border-card">
+          <div style="padding: 20px 0;border-top:1px dashed #ccc;width:90%;margin:0 auto">
+            <!-- <div class="">设置白名单</div>
+            <el-input type="textarea" :rows="4" style="width:100%" placeholder="IP之间以“,”隔开" /> -->
+            <el-tabs>
               <el-tab-pane label="代收">
                 <div v-if="Object.keys(commMoneyInfo[1]).length" class="commMoney-info">
                   <div v-for="(value, key) in commMoneyInfo[1]" v-show="infoMap[key]" :key="key" style="margin: 6px 0">
@@ -81,7 +83,7 @@
                 <el-table-column align="center" label="操作人" prop="operatorName" />
                 <el-table-column align="center" label="操作时间">
                   <template slot-scope="scope">
-                    {{ new Date(scope.row.operatorTime).toLocaleString() }}
+                    {{ scope.row.operatorTime ? new Date(scope.row.operatorTime).toLocaleString() : '' }}
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="操作" width="160">
@@ -195,7 +197,7 @@
               </el-form>
             </el-tab-pane>
             <el-tab-pane label="提现" name="fifth">
-              <el-form ref="witForm" :model="witForm" label-width="110px">
+              <el-form ref="witForm" :model="witForm" label-width="110px" :rules="witRule">
                 <el-form-item label="用户名称">
                   <el-input v-model="witForm.bankUserName" style="width:unset;" autocomplete="off" />
                 </el-form-item>
@@ -344,15 +346,21 @@
           </el-card>
         </el-col>
       </el-row>
+      <el-row style="margin-top:10px" :gutter="10">
+        <el-col :span="12">
+          <el-card>
+            <div class="admin-title">总入金金额</div>
+            <div id="allInMoney" class="admin-number">{{ (homeInfo.allInMoney / 100) || 0 }}</div>
+          </el-card>
+        </el-col>
+        <el-col :span="12">
+          <el-card>
+            <div class="admin-title">总出金金额</div>
+            <div id="allOutMoney" class="admin-number">{{ (homeInfo.allOutMoney / 100) || 0 }}</div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
-    <!-- <el-row style="margin-top:10px">
-      <el-col :span="12" :offset="6">
-        <el-card>
-          <div class="admin-title">商户总余额</div>
-          <div id="cancelCount" class="admin-number">{{ homeInfo.cancelCount || 0 }}</div>
-        </el-card>
-      </el-col>
-    </el-row> -->
   </div>
 </template>
 
@@ -367,6 +375,9 @@ export default {
   name: 'Dashboard',
   data() {
     return {
+      witRule: {
+        safetyPwd: [{ required: true, trigger: 'blur', message: '必填项目' }]
+      },
       commMoneyInfo: {
         1: {},
         2: {},
@@ -551,6 +562,8 @@ export default {
         numRunFun(0, response.data.allOutNum, document.querySelector('#allOutNum'))
         numRunFun(0, response.data.dayInCount, document.querySelector('#dayInCount'))
         numRunFun(0, response.data.dayOutCount, document.querySelector('#dayOutCount'))
+        numRunFun(0, response.data.allInMoney / 100, document.querySelector('#allInMoney'))
+        numRunFun(0, response.data.allOutMoney / 100, document.querySelector('#allOutMoney'))
         // this.homeInfo = response.data || {}
       })
     },
@@ -662,22 +675,26 @@ export default {
       })
     },
     handleWitForm() {
-      this.$store.dispatch('user/getPublicKey').then(response => {
-        const encrypt = new JSEncrypt()
-        encrypt.setPublicKey(response.publicKey)
-        const _form = Object.assign({}, this.witForm)
-        _form.operatorMoney = _form.operatorMoney * 100
-        _form.safetyPwd = encrypt.encrypt(_form.safetyPwd)
-        applyWit(_form).then(response => {
-          if (response.errorCode !== '10000') {
-            return
-          }
+      this.$refs['witForm'].validate(valid => {
+        if (valid) {
+          this.$store.dispatch('user/getPublicKey').then(response => {
+            const encrypt = new JSEncrypt()
+            encrypt.setPublicKey(response.publicKey)
+            const _form = Object.assign({}, this.witForm)
+            _form.operatorMoney = _form.operatorMoney * 100
+            _form.safetyPwd = encrypt.encrypt(_form.safetyPwd)
+            applyWit(_form).then(response => {
+              if (response.errorCode !== '10000') {
+                return
+              }
 
-          this.$message.success(response.mes)
-          this.initForm(this.witForm)
-        }).catch(err => {
-          this.$message.error(err)
-        })
+              this.$message.success(response.mes)
+              this.initForm(this.witForm)
+            }).catch(err => {
+              this.$message.error(err)
+            })
+          })
+        }
       })
     },
     initForm(form) {
@@ -733,7 +750,7 @@ export default {
 }
 .dashboard {
   &-container {
-    height: 100%;
+    height: 98%;
   }
   &-text {
     font-size: 30px;

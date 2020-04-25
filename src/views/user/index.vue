@@ -42,6 +42,7 @@
               {{ scope.row.commercialBalance / 100 }}
             </template>
           </el-table-column>
+          <el-table-column align="center" label="商户标识" prop="reserved2" />
           <el-table-column align="center" label="服务费比例" prop="commercialRatio">
             <template slot-scope="scope">
               <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
@@ -70,7 +71,7 @@
               {{ new Date(scope.row.creationTime).toLocaleString() }}
             </template>
           </el-table-column>
-          <el-table-column align="center" label="操作" width="180px">
+          <el-table-column align="center" label="操作" width="200px">
             <template slot-scope="scope">
               <el-row :gutter="4" style="margin-bottom: 4px">
                 <el-col :span="14">
@@ -81,11 +82,14 @@
                 </el-col>
               </el-row>
               <el-row :gutter="4">
-                <el-col :span="12">
+                <el-col :span="8">
                   <el-button style="width:100%" plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="8">
                   <el-button style="width:100%" plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
+                </el-col>
+                <el-col :span="8">
+                  <el-button style="width:100%" plain size="mini" type="primary" @click="edit(scope.row)">修改</el-button>
                 </el-col>
               </el-row>
 
@@ -111,6 +115,27 @@
         <div slot="footer" class="dialog-footer">
           <el-button size="mini" @click="mainTable.dialogFormVisible = false">取 消</el-button>
           <el-button size="mini" type="primary" @click="handleSubmitForm">确 定</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog width="500px" center title="修改商户" :visible.sync="mainTable.dialogEditVisible">
+        <el-form ref="editForm" :model="mainTable.editForm" label-width="80px">
+          <el-form-item label="姓名">
+            <el-input v-model="mainTable.editForm.commercialName" />
+          </el-form-item>
+          <el-form-item label="手机号">
+            <el-input v-model="mainTable.editForm.commercialIphone" />
+          </el-form-item>
+          <el-form-item label="商户标识">
+            <el-input v-model="mainTable.editForm.reserved2" />
+          </el-form-item>
+          <el-form-item label="支付密码">
+            <el-input v-model="mainTable.editForm.safetyPwd" type="password" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button size="mini" @click="mainTable.dialogEditVisible = false">取 消</el-button>
+          <el-button size="mini" type="primary" @click="handleEdit">确 定</el-button>
         </div>
       </el-dialog>
 
@@ -142,6 +167,9 @@
           </el-form-item>
           <el-form-item label="密码">
             <el-input v-model="mainTable.addForm.commercialPassword" type="password" autocomplete="off" />
+          </el-form-item>
+          <el-form-item label="商户标识">
+            <el-input v-model="mainTable.addForm.reserved2" autocomplete="off" />
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -181,7 +209,7 @@
 <script>
 import { getMenu, addRoleMenu } from '@/api/menu'
 import { bulidStr, handleIntoChildren } from '@/utils/index'
-import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser, getWhiteIp, delCommercia, recharge } from '@/api/user'
+import { getUserList, setRadio, setWitRadio, insertIp, getUserInfo, getInfo, addUser, getWhiteIp, delCommercia, recharge, updateCommercial } from '@/api/user'
 import Pagination from '@/components/Pagination'
 import { JSEncrypt } from 'jsencrypt'
 
@@ -192,6 +220,9 @@ export default {
   data() {
     return {
       getTreeData: '',
+      rulse: {
+        safetyPwd: [{ required: true, trigger: 'blur', message: '必填项目' }]
+      },
       mainTable: {
         loading: false,
         treeLoading: false,
@@ -199,6 +230,7 @@ export default {
         dialogAddVisible: false,
         dialogPermissionVisible: false,
         dialogCashVisible: false,
+        dialogEditVisible: false,
         commercialRatio: 0,
         commercialWithRatio: 0,
         row: {},
@@ -210,6 +242,12 @@ export default {
         cashForm: {
           money: ''
         },
+        editForm: {
+          commercialName: '',
+          commercialIphone: '',
+          reserved2: '',
+          safetyPwd: ''
+        },
         form: {
           commercialNumber: '',
           commercialWithRatio: '',
@@ -219,6 +257,7 @@ export default {
           commercialName: '',
           commercialIphone: '',
           userType: '',
+          reserved2: '',
           commercialPassword: ''
         },
         array: [],
@@ -237,6 +276,29 @@ export default {
     if (this.$route.name === 'UserList') this.getMainTableData()
   },
   methods: {
+    edit(item) {
+      this.mainTable.editForm.commercialName = item.commercialName
+      this.mainTable.editForm.safetyPwd = ''
+      this.mainTable.editForm.commercialIphone = item.commercialIphone
+      this.mainTable.editForm.reserved2 = item.reserved2
+      this.mainTable.row = item || {}
+      this.mainTable.dialogEditVisible = true
+    },
+    handleEdit() {
+      this.$store.dispatch('user/getPublicKey').then(response => {
+        const encrypt = new JSEncrypt()
+        encrypt.setPublicKey(response.publicKey)
+        const _form = Object.assign({}, this.mainTable.editForm)
+        _form.safetyPwd = _form.safetyPwd ? encrypt.encrypt(_form.safetyPwd) : undefined
+        _form.commercialId = this.mainTable.row.commercialId
+        updateCommercial(_form).then(response => {
+          if (response.errorCode !== '10000') return
+          this.mainTable.dialogEditVisible = false
+          this.$message.success(response.mes)
+          this.getMainTableData()
+        })
+      })
+    },
     setWhiteList(item) {
       this.mainTable.form.commercialNumber = item.commercialNumber
       getWhiteIp({ commercialNumber: item.commercialNumber }).then(response => {
@@ -268,7 +330,8 @@ export default {
       })
     },
     handlePagerChange(val) {
-      this.mainTable.pager = val
+      this.mainTable.pager.index = val.index
+      this.mainTable.pager.size = val.size
       this.getMainTableData()
     },
     handleCheck(item) {

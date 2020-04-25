@@ -275,7 +275,8 @@ export default {
       })
     },
     handlePagerChange(val) {
-      this.mainTable.pager = val
+      this.mainTable.pager.index = val.index
+      this.mainTable.pager.size = val.size
       this.getMainTableData()
     }
   }

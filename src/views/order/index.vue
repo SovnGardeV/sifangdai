@@ -28,10 +28,25 @@
           </el-select>
         </el-form-item>
         <el-form-item>
+          <el-date-picker
+            v-model="mainTable.filter.time"
+            align="right"
+            size="mini"
+            :editable="false"
+            clearable
+            unlink-panels
+            value-format="yyyy-MM-dd"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期(创建时间)"
+            end-placeholder="结束日期"
+          />
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" size="mini" @click="mainTable.pager.index = 1;getMainTableData()">
             <i class="el-icon-search" />
           </el-button>
-          <el-button v-if="$store.state.user.mode === 'admin'" type="primary" size="mini" @click="showDialog">订单修改</el-button>
+          <!-- <el-button v-if="$store.state.user.mode === 'admin'" type="primary" size="mini" @click="showDialog">订单修改</el-button> -->
         </el-form-item>
       </el-form>
     </el-card>
@@ -419,9 +434,9 @@
               </el-form-item>
               <el-form-item label="支付类型" prop="payType">
                 <el-select v-model="mainTable.distribuForm.payType" style="width:100%">
-                  <el-option :value="1" label="支付宝">支付宝</el-option>
+                  <!-- <el-option :value="1" label="支付宝">支付宝</el-option> -->
                   <el-option :value="2" label="银行卡">银行卡</el-option>
-                  <el-option :value="3" label="微信">微信</el-option>
+                  <!-- <el-option :value="3" label="微信">微信</el-option> -->
                 </el-select>
               </el-form-item>
               <el-form-item label="订单标识">
@@ -450,7 +465,7 @@
 
         <div slot="footer" class="dialog-footer" style="text-align:center">
           <el-button size="mini" @click="mainTable.dialogDistributeVisible = false">取 消</el-button>
-          <el-button size="mini" type="primary" @click="handleDistributeQR(mainTable.applicationType)">确 定</el-button>
+          <el-button size="mini" type="primary" @click="handleDistributeQR(mainTable.filter.applicationType)">确 定</el-button>
         </div>
       </div>
 
@@ -544,6 +559,7 @@ export default {
           orderStatus: '',
           backStatus: '',
           bankPhone: '',
+          time: [],
           applicationType: '1'
         },
         orderForm: {
@@ -563,13 +579,11 @@ export default {
           outId: '',
           operatorMoney: '',
           makerName: '',
-          num: '',
-          applicationType: '',
           payType: '',
           time: '',
           sign: '',
           remark: '',
-          callBackUrl: '',
+          appKey: '',
           applicationName: ''
 
         },
@@ -607,6 +621,7 @@ export default {
         if (response.errorCode !== '10000') return
 
         this.mainTable.appArray = response.rows
+        this.mainTable.distribuForm.appKey = response.appKey
       })
     },
     showDialog() {
@@ -694,11 +709,11 @@ export default {
       } = this.mainTable.distribuForm
       const str =
       'applicationName=' + applicationName +
-      '&bankAccount' + bankAccount +
-      '&bankAddress' + bankAddress +
-      '&bankName' + bankName +
-      '&bankPhone' + bankPhone +
-      '&bankUserName' + bankUserName +
+      '&bankAccount=' + bankAccount +
+      '&bankAddress=' + bankAddress +
+      '&bankName=' + bankName +
+      '&bankPhone=' + bankPhone +
+      '&bankUserName=' + bankUserName +
       '&commercialNumber=' + commercialNumber +
       '&makerName=' + makerName +
       '&operatorMoney=' + (operatorMoney * 100) +
@@ -724,6 +739,12 @@ export default {
     getMainTableData() {
       this.mainTable.loading = true
       const _filter = Object.assign({}, this.mainTable.filter)
+      if (Array.isArray(this.mainTable.filter.time) && this.mainTable.filter.time.length === 2) {
+        _filter.openDate = this.mainTable.filter.time[0]
+        _filter.endDate = this.mainTable.filter.time[1]
+      }
+
+      delete _filter.time
       _filter.commercialNumber = _filter.commercialNumber || localStorage.getItem('number')
       const _form = {
         commercialNumber: localStorage.getItem('number'),
@@ -741,7 +762,8 @@ export default {
       })
     },
     handlePagerChange(val) {
-      this.mainTable.pager = val
+      this.mainTable.pager.index = val.index
+      this.mainTable.pager.size = val.size
       this.getMainTableData()
     },
     confirmOrder(orderId, confirm) {

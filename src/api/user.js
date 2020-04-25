@@ -218,3 +218,12 @@ export function getCommMoneyInfo(data) {
   })
 }
 
+export function updateCommercial(data) {
+  return request({
+    url: '/instead-pay-web/Commercial/updateCommercial',
+    'Content-Type': 'multipart/form-data',
+    method: 'post',
+    data
+  })
+}
+

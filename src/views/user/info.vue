@@ -75,14 +75,16 @@
                   </el-col>
                 </el-row>
                 <el-row style="padding: 5px" :gutter="10">
-                  <el-col :span="8">
+                  <el-col :span="10">
                     <div class="image-header">
                       <el-image :src="item.appImg" />
                     </div>
                   </el-col>
-                  <el-col :span="16">
+                  <el-col :span="14">
                     <div v-for="(value,key) in item" :key="key" style="font-size:14px;margin:4px">
-                      <span v-if="appMap[key]">{{ appMap[key] }}：{{ value }}
+                      <span v-if="appMap[key]" style="word-break:break-all;">
+                        <span style="color:#aaa;">{{ appMap[key] }}：</span>
+                        {{ value }}
                         <i v-if="key==='appKey'" style="cursor:pointer" class="el-icon-edit" @click="editAPPKey(item)" />
                       </span>
                     </div>
@@ -199,13 +201,14 @@ export default {
         appKey: 'appKey'
       },
       appMap: {
-        appName: 'App名称',
+        appName: 'APP名称',
+        appId: 'APPID',
         appWhiteList: '白名单',
         appBackUrl: '回调地址',
         appKey: 'appKey',
         appIsPut: '是否上架',
         createTime: '创建时间',
-        operatorTime: '操作时间',
+        // operatorTime: '操作时间',
         operatorName: '操作人'
       },
       frontInfo: {
@@ -441,6 +444,7 @@ export default {
 
 .app-info{
   width: 100%;
+  padding: 8px;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
   border-radius: 4px;
   // background: url('../../assets/bg.jpg') no-repeat;
@@ -449,6 +453,7 @@ export default {
   /* cursor: pointer; */
   position: relative;
   overflow: hidden;
+  margin-bottom: 8px;
 
   .app-info-detail{
     position: absolute;
@@ -482,8 +487,9 @@ export default {
 
   .image-header{
     position:relative;
-    width:100%;
-    height:160px;
+    width:144px;
+    height:144px;
+    margin: 0 auto;
     .el-image{
       width:100%;
       height:100%;

@@ -6,8 +6,9 @@
       :page-size="pagerSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="pagerTotal"
+      :current-page="pagerIndex"
       @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
+      @current-change.capture="handleCurrentChange"
     />
   </div>
 </template>
@@ -36,6 +37,11 @@ export default {
         total: 0
       }
     }
+  },
+  created() {
+    this.pager.index = this.pagerIndex
+    this.pager.size = this.pagerSize
+    this.pager.total = this.pagerTotal
   },
   methods: {
     handleSizeChange(val) {
