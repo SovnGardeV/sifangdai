@@ -17,94 +17,171 @@
               <i class="el-icon-search" />
             </el-button>
             <el-button type="primary" size="mini" @click="showAddForm">新增</el-button>
-            <el-button type="danger" size="mini" @click="deleteItem">删除</el-button>
+            <el-button type="danger" size="mini" @click="deleteItem(mainTable.filter.type === '1' ? 'admin': 'merchant')">删除</el-button>
           </el-form-item>
         </el-form>
       </el-card>
-      <el-card>
-        <el-table
-          ref="mainTable"
-          v-loading="mainTable.loading"
-          :data="mainTable.array"
-          element-loading-text="加载中，请稍候"
-          element-loading-spinner="el-icon-loading"
-          border
-          stripe
-          fit
-          highlight-current-row
-        >
-          <el-table-column type="selection" align="center" />
-          <el-table-column align="center" label="姓名" prop="commercialName" />
-          <el-table-column align="center" label="手机号" prop="commercialIphone" />
-          <el-table-column align="center" label="商户号" prop="commercialNumber" />
-          <el-table-column align="center" label="商户余额" prop="commercialBalance">
-            <template slot-scope="scope">
-              {{ scope.row.commercialBalance / 100 }}
-            </template>
-          </el-table-column>
-          <el-table-column align="center" label="商户标识" prop="reserved2" />
-          <el-table-column align="center" label="服务费比例" prop="commercialRatio">
-            <template slot-scope="scope">
-              <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
-              <div v-show="!scope.row.isEdit">
-                <span>{{ scope.row.commercialRatio }}</span>
-                <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editService(scope.row)" />
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column align="center" label="提成服务费比例" prop="commercialRatio">
-            <template slot-scope="scope">
-              <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialWithRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
-              <div v-show="!scope.row.isWitEdit">
-                <span>{{ scope.row.commercialWithRatio }}</span>
-                <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editWitService(scope.row)" />
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column align="center" label="修改时间">
-            <template slot-scope="scope">
-              {{ new Date(scope.row.updateTime).toLocaleString() }}
-            </template>
-          </el-table-column>
-          <el-table-column align="center" label="创建时间">
-            <template slot-scope="scope">
-              {{ new Date(scope.row.creationTime).toLocaleString() }}
-            </template>
-          </el-table-column>
-          <el-table-column align="center" label="操作" width="200px">
-            <template slot-scope="scope">
-              <el-row :gutter="4" style="margin-bottom: 4px">
-                <el-col :span="14">
-                  <el-button style="width:100%" type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
-                </el-col>
-                <el-col :span="10">
-                  <el-button style="width:100%" size="mini" type="primary" plain @click="recharge(scope.row)">充值</el-button>
-                </el-col>
-              </el-row>
-              <el-row :gutter="4">
-                <el-col :span="8">
-                  <el-button style="width:100%" plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
-                </el-col>
-                <el-col :span="8">
-                  <el-button style="width:100%" plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
-                </el-col>
-                <el-col :span="8">
-                  <el-button style="width:100%" plain size="mini" type="primary" @click="edit(scope.row)">修改</el-button>
-                </el-col>
-              </el-row>
+      <el-tabs v-model="mainTable.filter.type" type="border-card" @tab-click="handleTabClick">
+        <el-tab-pane label="系统用户" name="1">
+          <el-table
+            ref="admin"
+            v-loading="mainTable.loading"
+            :data="mainTable.array"
+            element-loading-text="加载中，请稍候"
+            element-loading-spinner="el-icon-loading"
+            border
+            stripe
+            fit
+            highlight-current-row
+          >
+            <el-table-column type="selection" align="center" />
+            <el-table-column align="center" label="姓名" prop="commercialName" />
+            <el-table-column align="center" label="手机号" prop="commercialIphone" />
+            <el-table-column align="center" label="商户号" prop="commercialNumber" />
+            <el-table-column align="center" label="商户余额" prop="commercialBalance">
+              <template slot-scope="scope">
+                {{ scope.row.commercialBalance / 100 }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="商户标识" prop="reserved2" />
+            <el-table-column align="center" label="服务费比例" prop="commercialRatio">
+              <template slot-scope="scope">
+                <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+                <div v-show="!scope.row.isEdit">
+                  <span>{{ scope.row.commercialRatio }}</span>
+                  <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editService(scope.row)" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="提成服务费比例" prop="commercialRatio">
+              <template slot-scope="scope">
+                <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialWithRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+                <div v-show="!scope.row.isWitEdit">
+                  <span>{{ scope.row.commercialWithRatio }}</span>
+                  <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editWitService(scope.row)" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="修改时间">
+              <template slot-scope="scope">
+                {{ new Date(scope.row.updateTime).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="创建时间">
+              <template slot-scope="scope">
+                {{ new Date(scope.row.creationTime).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="操作" width="150px">
+              <template slot-scope="scope">
+                <el-row :gutter="4" style="margin-bottom: 4px">
+                  <el-col :span="24">
+                    <el-button style="width:100%" type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="4">
+                  <el-col :span="12">
+                    <el-button style="width:100%" plain size="mini" type="primary" @click="getTreeData(scope.row)">权限</el-button>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-button style="width:100%" plain size="mini" type="primary" @click="edit(scope.row)">修改</el-button>
+                  </el-col>
+                </el-row>
 
-            </template>
-          </el-table-column>
+              </template>
+            </el-table-column>
 
-        </el-table>
+          </el-table>
 
-        <pagination
-          :pager-size="mainTable.pager.size"
-          :pager-index="mainTable.pager.index"
-          :pager-total="mainTable.pager.total"
-          @pagination-change="handlePagerChange"
-        />
-      </el-card>
+          <pagination
+            :pager-size="mainTable.pager.size"
+            :pager-index="mainTable.pager.index"
+            :pager-total="mainTable.pager.total"
+            @pagination-change="handlePagerChange"
+          />
+        </el-tab-pane>
+        <el-tab-pane label="商户用户" name="2">
+          <el-table
+            ref="merchant"
+            v-loading="mainTable.loading"
+            :data="mainTable.array"
+            element-loading-text="加载中，请稍候"
+            element-loading-spinner="el-icon-loading"
+            border
+            stripe
+            fit
+            highlight-current-row
+          >
+            <el-table-column type="selection" align="center" />
+            <el-table-column align="center" label="姓名" prop="commercialName" />
+            <el-table-column align="center" label="手机号" prop="commercialIphone" />
+            <el-table-column align="center" label="商户号" prop="commercialNumber" />
+            <el-table-column align="center" label="商户余额" prop="commercialBalance">
+              <template slot-scope="scope">
+                {{ scope.row.commercialBalance / 100 }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="商户标识" prop="reserved2" />
+            <el-table-column align="center" label="服务费比例" prop="commercialRatio">
+              <template slot-scope="scope">
+                <el-input v-show="scope.row.isEdit" ref="editRadio" v-model="mainTable.commercialRatio" @blur="handleEditRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+                <div v-show="!scope.row.isEdit">
+                  <span>{{ scope.row.commercialRatio }}</span>
+                  <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editService(scope.row)" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="提成服务费比例" prop="commercialRatio">
+              <template slot-scope="scope">
+                <el-input v-show="scope.row.isWitEdit" ref="editWitRadio" v-model="mainTable.commercialWithRatio" @blur="handleEditWitRadio(scope.row)" @keyup.enter.native="handleEditRadio(scope.row)" />
+                <div v-show="!scope.row.isWitEdit">
+                  <span>{{ scope.row.commercialWithRatio }}</span>
+                  <el-button title="修改" type="text" size="small" icon="el-icon-edit" @click="editWitService(scope.row)" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="修改时间">
+              <template slot-scope="scope">
+                {{ new Date(scope.row.updateTime).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="创建时间">
+              <template slot-scope="scope">
+                {{ new Date(scope.row.creationTime).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="操作" width="180px">
+              <template slot-scope="scope">
+                <el-row :gutter="4" style="margin-bottom: 4px">
+                  <el-col :span="14">
+                    <el-button style="width:100%" type="primary" size="mini" @click="setWhiteList(scope.row)">设置白名单</el-button>
+                  </el-col>
+                  <el-col :span="10">
+                    <el-button style="width:100%" size="mini" type="primary" plain @click="recharge(scope.row)">充值</el-button>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="4">
+                  <el-col :span="12">
+                    <el-button style="width:100%" plain size="mini" type="primary" @click="handleCheck(scope.row)">查看</el-button>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-button style="width:100%" plain size="mini" type="primary" @click="edit(scope.row)">修改</el-button>
+                  </el-col>
+                </el-row>
+
+              </template>
+            </el-table-column>
+
+          </el-table>
+
+          <pagination
+            :pager-size="mainTable.pager.size"
+            :pager-index="mainTable.pager.index"
+            :pager-total="mainTable.pager.total"
+            @pagination-change="handlePagerChange"
+          />
+        </el-tab-pane>
+      </el-tabs>
 
       <el-dialog width="500px" center title="设置白名单" :visible.sync="mainTable.dialogFormVisible">
         <el-form ref="form" :model="mainTable.form">
@@ -237,6 +314,7 @@ export default {
         filter: {
           commercialName: '',
           commercialIphone: '',
+          type: '2',
           commercialNumber: ''
         },
         cashForm: {
@@ -495,8 +573,8 @@ export default {
         item.isWitEdit = false
       })
     },
-    deleteItem() {
-      if (!this.$refs['mainTable'].selection.length) {
+    deleteItem(type) {
+      if (!this.$refs[`${type}`].selection.length) {
         this.$message.info('请选择要删除的商户')
         return
       }
@@ -506,7 +584,7 @@ export default {
         type: 'warning'
       }).then(() => {
         let ids = []
-        this.$refs['mainTable'].selection.forEach(item => {
+        this.$refs[`${type}`].selection.forEach(item => {
           ids.push(item.commercialId)
         })
         ids = ids.join(',')
@@ -533,7 +611,15 @@ export default {
       }).catch(err => {
         this.$message.error(err)
       })
+    },
+    handleTabClick() {
+      const keyNameArr = Object.keys(this.mainTable.filter)
+      keyNameArr.forEach(item => {
+        if (item !== 'type') this.mainTable.filter[item] = ''
+      })
+      this.getMainTableData()
     }
+
   }
 }
 </script>

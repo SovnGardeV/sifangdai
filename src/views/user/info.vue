@@ -24,30 +24,53 @@
           <el-row style="padding: 10px 0" :gutter="10">
             <el-col :span="6">
               <div class="commMoney-info-front">
-                总金额:{{ (frontInfo.allMoney/100) || 0 }}
+                总金额:{{ (commMoneyInfo.allInMoney/100) || 0 }}
               </div>
             </el-col>
             <el-col :span="6">
               <div class="commMoney-info-front">
-                总提现金额:{{ (frontInfo.allWitMoney/100) || 0 }}
+                总提现金额:{{ (commMoneyInfo.allOutMoney/100) || 0 }}
               </div>
             </el-col>
             <el-col :span="6">
               <div class="commMoney-info-front">
-                余额:{{ (frontInfo.balance/100) || 0 }}
+                余额:{{ (commMoneyInfo.commercialBalance/100) || 0 }}
               </div>
             </el-col>
             <el-col :span="6">
               <div class="commMoney-info-front">
-                冻结金额:{{ (frontInfo.freezeMoney/100) || 0 }}
+                冻结金额:{{ (commMoneyInfo.freezeMoney/100) || 0 }}
               </div>
             </el-col>
           </el-row>
           <el-row :gutter="8">
-            <el-col v-for="(item,index) in commMoneyInfo" :key="index" :span="8">
+            <el-col :span="8">
               <div class="commMoney-info">
-                <div v-for="(value, key) in item" v-show="infoMap.keyValue[key]" :key="key">
-                  <span>{{ infoMap.keyValue[key] }}：{{ key === 'type' ? infoMap.type[value] : key === 'operMoney' ? (value/100) : value }}</span>
+                <div>
+                  <span>今日代收单数：{{ commMoneyInfo.dayInNum || 0 }}</span>
+                </div>
+                <div>
+                  <span>今日代收金额：{{ (commMoneyInfo.dayInMoney/100) || 0 }}</span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="commMoney-info">
+                <div>
+                  <span>今日代付单数：{{ commMoneyInfo.dayOutNum || 0 }}</span>
+                </div>
+                <div>
+                  <span>今日代付金额：{{ (commMoneyInfo.dayOutMoney/100) || 0 }}</span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="commMoney-info">
+                <div>
+                  <span>今日提现单数：{{ commMoneyInfo.dayWitNum || 0 }}</span>
+                </div>
+                <div>
+                  <span>今日提现金额：{{ (commMoneyInfo.dayWitMoney/100) || 0 }}</span>
                 </div>
               </div>
             </el-col>
@@ -186,10 +209,6 @@ export default {
         commercialName: '商户名',
         commercialIphone: '商户手机号',
         commercialNumber: '商户号',
-        commercialBalance: '商户余额',
-        freezeMoney: '冻结金额',
-        allMoney: '总金额',
-        allWitMoney: '总提现金额',
         commercialRatio: '服务费收取比例',
         creationTime: '创建时间',
         updateTime: '	修改时间',
@@ -211,17 +230,12 @@ export default {
         // operatorTime: '操作时间',
         operatorName: '操作人'
       },
-      frontInfo: {
-        allMoney: '',
-        allWitMoney: '',
-        balance: '',
-        freezeMoney: ''
-      },
       infoMap: {
         type: {
           1: '代收',
           2: '代付',
-          3: '提现'
+          3: '提现',
+          4: '充值'
         },
         keyValue: {
           // allMoney: '总金额',
@@ -243,18 +257,13 @@ export default {
   },
   methods: {
     getCommMoneyInfo() {
-      const { commercialId } = this.$route.query
+      const { commercialId, commercialNumber } = this.$route.query
       getCommMoneyInfo({
-        commercialId
+        commercialId,
+        commercialNumber
       }).then(response => {
         if (response.errorCode !== '10000') return
-        this.commMoneyInfo = response.rows
-        if (Array.isArray(response.rows) && response.rows.length) {
-          this.frontInfo.allMoney = response.rows[0].allMoney
-          this.frontInfo.allWitMoney = response.rows[0].allWitMoney
-          this.frontInfo.balance = response.rows[0].balance
-          this.frontInfo.freezeMoney = response.rows[0].freezeMoney
-        }
+        this.commMoneyInfo = response.data || {}
       })
     },
     showDialog(type, item) {

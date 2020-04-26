@@ -2,27 +2,27 @@
   <div class="app-container">
     <el-card class="filter-container">
       <el-form :inline="true" style="text-align:right">
-        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
+        <el-form-item v-if="mainTable.filter.applicationType !== '3' && mainTable.filter.applicationType !== '4'">
           <el-input v-model="mainTable.filter.remark" :placeholder="mainTable.filter.applicationType === '2' ? '收款人' : '打款人'" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item v-if="$store.state.user.mode === 'admin'">
           <el-input v-model="mainTable.filter.commercialNumber" placeholder="商户ID" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
-        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
+        <el-form-item v-if="mainTable.filter.applicationType !== '3' && mainTable.filter.applicationType !== '4'">
           <el-input v-model="mainTable.filter.outId" placeholder="外部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="mainTable.filter.applicationType !== '4'">
           <el-input v-model="mainTable.filter.bankPhone" placeholder="手机号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
         <el-form-item>
           <el-input v-model="mainTable.filter.orderId" placeholder="内部订单号" size="mini" @keyup.enter.native="mainTable.pager.index = 1;getMainTableData()" />
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="mainTable.filter.applicationType !== '4'">
           <el-select v-model="mainTable.filter.orderStatus" placeholder="订单状态" size="mini" clearable>
             <el-option v-for="(value, key) in map.orderStatus" :key="key" :value="key" :label="value">{{ value }}</el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="mainTable.filter.applicationType !== '3'">
+        <el-form-item v-if="mainTable.filter.applicationType !== '3' && mainTable.filter.applicationType !== '4'">
           <el-select v-model="mainTable.filter.backStatus" placeholder="回调状态" size="mini" clearable>
             <el-option v-for="(value, key) in map.backStatus" :key="key" :value="key" :label="value">{{ value }}</el-option>
           </el-select>
@@ -345,6 +345,86 @@
           @pagination-change="handlePagerChange"
         />
       </el-tab-pane>
+      <el-tab-pane v-if="$store.state.user.mode === 'admin'" label="充值" name="4">
+        <!-- <el-col style="text-align:right;margin-bottom:10px;position:relative;z-index:2">
+          <el-button size="mini" type="primary" @click="distributeQR">发起代收</el-button>
+        </el-col> -->
+        <el-table
+          ref="mainTable4"
+          v-loading="mainTable.loading"
+          class=""
+          :data="mainTable.array"
+          element-loading-text="加载中，请稍候"
+          element-loading-spinner="el-icon-loading"
+          border
+          stripe
+          fit
+          highlight-current-row
+        >
+          <el-table-column align="center" label="内部订单号" prop="orderId" />
+          <el-table-column align="center" label="商户ID" prop="commercialNumber" />
+          <el-table-column align="center" label="操作金额">
+            <template slot-scope="scope">
+              {{ (scope.row.operatorMoney||0) / 100 }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" label="浮动金额">
+            <template slot-scope="scope">
+              {{ scope.row.floatMoney / 100 }}
+            </template>
+          </el-table-column> -->
+          <el-table-column align="center" label="实际金额">
+            <template slot-scope="scope">
+              {{ (scope.row.deductedMoney||0) / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="订单状态">
+            <template slot-scope="scope">
+              {{ map.orderStatus[scope.row.orderStatus] }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="回调状态">
+            <template slot-scope="scope">
+              {{ map.backStatus[scope.row.backStatus] }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" label="打款人" prop="remark" /> -->
+          <el-table-column align="center" label="服务费" prop="outRatio">
+            <template slot-scope="scope">
+              {{ (scope.row.outRatio || 0) / 100 }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="创建时间">
+            <template slot-scope="scope">
+              {{ new Date(scope.row.createTime).toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="确认时间">
+            <template slot-scope="scope">
+              {{ scope.row.confirmTime ? new Date(scope.row.confirmTime).toLocaleString() : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="支付方式">
+            <template slot-scope="scope">
+              {{ map.payType[scope.row.payType ] }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="手动挂单">
+            <template slot-scope="scope">
+              {{ scope.row.isHand == 1 ? '是' : '否' }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="操作管理员" prop="operatorName" />
+
+        </el-table>
+
+        <pagination
+          :pager-size="mainTable.pager.size"
+          :pager-index="mainTable.pager.index"
+          :pager-total="mainTable.pager.total"
+          @pagination-change="handlePagerChange"
+        />
+      </el-tab-pane>
     </el-tabs>
 
     <el-dialog width="400px" center title="订单详情" :visible.sync="mainTable.dialogMethodVisible">
@@ -426,9 +506,9 @@
                   <el-option v-for="item in mainTable.appArray" :key="item.appId" :value="`${item.appId},${item.appKey}`" :label="item.appName">{{ item.appName }}</el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item label="外部订单号" prop="outId">
+              <!-- <el-form-item label="外部订单号" prop="outId">
                 <el-input v-model="mainTable.distribuForm.outId" autocomplete="off" />
-              </el-form-item>
+              </el-form-item> -->
               <!-- <el-form-item label="打款人姓名" prop="makerName">
             <el-input v-model="mainTable.distribuForm.makerName" autocomplete="off" />
           </el-form-item> -->
@@ -695,10 +775,11 @@ export default {
     },
     handleDistributeQR(type) {
       const _arr = this.mainTable.distribuForm.applicationName.split(',')
-      this.mainTable.distribuForm.applicationName = _arr[0]
-      this.mainTable.distribuForm.appKey = _arr[1]
-      this.mainTable.distribuForm.operatorMoney = this.mainTable.distribuForm.operatorMoney * 100
-      this.mainTable.distribuForm.time = new Date().getTime()
+      const _form = Object.assign({}, this.mainTable.distribuForm)
+      _form.applicationName = _arr[0]
+      _form.appKey = _arr[1]
+      _form.operatorMoney = this.mainTable.distribuForm.operatorMoney * 100
+      _form.time = new Date().getTime()
       const {
         applicationName,
         bankAccount,
@@ -714,7 +795,7 @@ export default {
         remark,
         appKey,
         time
-      } = this.mainTable.distribuForm
+      } = _form
       const str =
       'applicationName=' + applicationName +
       '&bankAccount=' + bankAccount +
@@ -731,9 +812,8 @@ export default {
       '&time=' + time +
       '&appKey=' + appKey
 
-      this.mainTable.distribuForm.sign = cryptoJs.MD5(str).toString()
-      debugger
-      distributeQR(this.mainTable.distribuForm, type).then(response => {
+      _form.sign = cryptoJs.MD5(str).toString()
+      distributeQR(_form, type).then(response => {
         if (response.errorCode !== '10000') {
           return
         }
